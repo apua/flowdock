@@ -14,6 +14,7 @@ def connect(**kw):
 
     To connect integration::
 
+        connect(flow_token='...')
         connect(flow_token='...', org='...', flow='...')
     """
     if kw.keys() == {'token'} or kw.keys() == {'token', 'org'}:
@@ -23,7 +24,7 @@ def connect(**kw):
         return flow(**kw)
     elif kw.keys() == {'token', 'user'} or kw.keys() == {'token', 'org', 'user'}:
         return private_message(**kw)
-    elif kw.keys() == {'flow_token', 'org', 'flow'}:
+    elif kw.keys() == {'flow_token'} or kw.keys() == {'flow_token', 'org', 'flow'}:
         return integration(**kw)
     else:
         raise TypeError
