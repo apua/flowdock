@@ -1,3 +1,37 @@
+def flow(token, org, flow):
+    r"""
+    -   not support emoji
+    -   support stream API
+    """
+    obj = lambda: None
+    return obj
+
+
+def private_message(token, user, org=None):
+    r"""
+    -   cache user ID at module-level
+    -   use `{org}` if provided
+    """
+    obj = lambda: None
+    return obj
+
+
+def integration(flow_token, org=None, flow=None):
+    r"""
+    -   use `{org}/{flow}` if provided
+    -   support partial function
+    """
+    if org is None and flow is None:
+        obj = lambda org, flow: integration(flow_token, org, flow)
+        "less support"
+    elif org is not None and flow is not None:
+        obj = lambda: None
+        "more support"
+    else:
+        raise TypeError
+    return obj
+
+
 def connect(**kw):
     r"""
     To connect flow::
