@@ -23,11 +23,6 @@ def flow(token, org, flow):
     r"""
     -   not support emoji
     -   support stream API
-
-    >>> from tests.tokens import PERSONAL_API_TOKEN
-    >>> myflow = flow(PERSONAL_API_TOKEN, 'hpe', 'apua-flow')
-    >>> msg_id = myflow.send('doctest')
-    >>> myflow.show(msg_id)
     """
     auth = (token, '')
 
@@ -51,11 +46,6 @@ def private_message(token, user, org=None):
     r"""
     -   cache user ID at module-level
     -   use `{org}` if provided
-
-    >>> from tests.tokens import PERSONAL_API_TOKEN
-    >>> ray = private_message(PERSONAL_API_TOKEN, 'Ray_')
-    >>> msg_id = ray.send('doctest')
-    >>> ray.show(msg_id)
     """
     auth = (token, '')
     uid = get_uid(auth, user, org)
