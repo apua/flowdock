@@ -7,6 +7,10 @@ STREAM = 'https://stream.flowdock.com'
 
 
 def get_uid(auth, user, org=None):
+    """
+    -   cache "user name" - "UID" mapping
+    -   fetch mapping by different URI based on given org
+    """
     if isinstance(user, int):
         uid = user
     elif user in get_uid.users:
@@ -42,7 +46,7 @@ def flow(token, org, flow):
     def edit(msg_id, content=None, tags=None, override_tags=False):
         """
         -   at least edit `content` or `tags`
-        -   not allow modify starts with ":" tags
+        -   not allow modify starts with ':' tags
         -   not allow override existing tags unless `overrride_tags` is True
         -   by default, `override_tags` is False, and new tags will be appended to origin tags
         """
