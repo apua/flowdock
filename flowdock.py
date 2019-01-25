@@ -1,3 +1,5 @@
+import re
+
 import requests
 
 API = 'https://api.flowdock.com'
@@ -37,6 +39,32 @@ def flow(token, org, flow):
         assert resp.status_code == 200, (resp.status_code, resp.json())
         return resp.json()
 
+    def edit(msg_id, content=None, tags=None, override_tags=False):
+        """
+        -   at least edit `content` or `tags`
+        -   not allow modify starts with ":" tags
+        -   not allow override existing tags unless `overrride_tags` is True
+        -   by default, `override_tags` is False, and new tags will be appended to origin tags
+        """
+        if content is None and tags is None:
+            raise TypeError('at least edit `content` or `tags`')
+
+        payload = {}
+        if content is not None:
+            payload['content'] = content
+        if tags is not None:
+            _tags = show(msg_id)['tags']
+            if override_tags:
+                _tags = [t for t in _tags if re.match(r'\W', t)]
+            payload['tags'] = _tags + tags
+
+        resp = requests.put(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth, json=payload)
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+
+    def delete(msg_id):
+        resp = requests.delete(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+
     obj = lambda: None
     obj.__dict__.update(locals())
     return obj
@@ -59,6 +87,14 @@ def private_message(token, user, org=None):
         resp = requests.get(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
         assert resp.status_code == 200, (resp.status_code, resp.json())
         return resp.json()
+
+    def edit(msg_id, content):
+        resp = requests.put(f'{API}/private/{uid}/messages/{msg_id}', auth=auth, json={'content':content})
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+
+    def delete(msg_id):
+        resp = requests.delete(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
 
     obj = lambda: None
     obj.__dict__.update(locals())
