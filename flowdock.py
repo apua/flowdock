@@ -69,6 +69,11 @@ def flow(token, org, flow):
         resp = requests.delete(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
         assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
 
+    def list(**conditions):
+        resp = requests.get(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.json())
+        return resp.json()
+
     obj = lambda: None
     obj.__dict__.update(locals())
     return obj
@@ -99,6 +104,11 @@ def private_message(token, user, org=None):
     def delete(msg_id):
         resp = requests.delete(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
         assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+
+    def list(**conditions):
+        resp = requests.get(f'{API}/private/{uid}/messages', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.json())
+        return resp.json()
 
     obj = lambda: None
     obj.__dict__.update(locals())
