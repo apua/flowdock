@@ -1,4 +1,5 @@
 import re
+import types
 
 import requests
 
@@ -74,9 +75,7 @@ def flow(token, org, flow):
         assert resp.status_code == 200, (resp.status_code, resp.json())
         return resp.json()
 
-    obj = lambda: None
-    obj.__dict__.update(locals())
-    return obj
+    return types.SimpleNamespace(**locals())
 
 
 def private_message(token, user, org=None):
@@ -110,9 +109,7 @@ def private_message(token, user, org=None):
         assert resp.status_code == 200, (resp.status_code, resp.json())
         return resp.json()
 
-    obj = lambda: None
-    obj.__dict__.update(locals())
-    return obj
+    return types.SimpleNamespace(**locals())
 
 
 def integration(flow_token, org=None, flow=None):
