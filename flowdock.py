@@ -1,3 +1,4 @@
+import collections
 import re
 import types
 
@@ -23,7 +24,47 @@ def get_uid(auth, user, org=None):
         uid = get_uid.users[user]
 
     return uid
+
 get_uid.users = {}
+
+
+def get_events(conn):
+    """
+     Interprete and yield :cls:`Event` object according to `Server-sent events`__ .
+
+    __ https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
+    """
+    buffer = types.SimpleNamespace(event_type='', data='', last_event_id='')
+
+    def process_field(field_name, value: str):
+        if field_name == 'event':
+            buffer.event_type = value
+        elif field_name == 'data':
+            buffer.data += value
+        elif field_name == 'id':
+            if '\x00' not in value:
+                buffer.last_event_id = value
+        elif field_name == 'retry':
+            raise NotImplementedError('cannot set reconnection time')
+        else:
+            pass
+
+    for line in map(bytes.decode, conn.iter_lines()):
+        if not line:
+            if buffer.data:
+                yield get_events.Event(buffer.event_type, buffer.data, buffer.last_event_id)
+            buffer.event_type = buffer.data = ''
+        elif line.startswith(':'):
+            pass
+        elif ':' in line:
+            field_name, tail = line.split(':', 1)
+            value = tail.lstrip(' ')
+            process_field(field_name, value)
+        else:
+            field_name = line
+            process_field(field_name, '')
+
+get_events.Event = collections.namedtuple('Event', 'type data last_event_id')
 
 
 def flow(token, org, flow):
@@ -74,6 +115,13 @@ def flow(token, org, flow):
         resp = requests.get(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=conditions)
         assert resp.status_code == 200, (resp.status_code, resp.json())
         return resp.json()
+
+    def events():
+        with requests.get(f'{STREAM}/flows/{org}/{flow}', auth=auth,
+                          headers={'Accept':'text/event-stream'}, stream=True) as resp:
+            assert resp.status_code == 200, (resp.status_code, resp.json())
+            yield from get_events(resp)
+            # TODO: parse the output of `get_events` for easy usage
 
     return types.SimpleNamespace(**locals())
 
