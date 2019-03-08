@@ -8,24 +8,37 @@ API = 'https://api.flowdock.com'
 STREAM = 'https://stream.flowdock.com'
 
 
-def get_uid(auth, user, org=None):
+def get_uid(token, name) -> int:
     """
-    -   cache "user name" - "UID" mapping
-    -   fetch mapping by different URI based on given org
+    Get UID by display name.
+
+    The dumped user data is formed as below.
+    Note that :prop:`nick` (i.e. "Display name" field in "Edit profile" page) is unique,
+    but :prop:`name` (i.e "Name" field in Edit profile" page) is not.
+
+    Therefore, it is nothing different between searching with organization/flow or not.
+
+    This function also cache user ``nick - id`` mapping.
+    It is reasonable because of less adding users and expensive fetching data.
+
+    .. code:: json
+
+        {
+            "id": 336968,
+            "nick": "Ray_",
+            "email": "ray.zhu@hpe.com",
+            "avatar": "https://d2cxspbh1aoie1.cloudfront.net/avatars/local/4965d1f57b777771d2baf1a71dccaa9a61d0c6050d9b37d5e58380cdff56d813/",
+            "name": "Ray Zhu",
+            "website": null
+        }
     """
-    if isinstance(user, int):
-        uid = user
-    elif user in get_uid.users:
-        uid = get_uid.users[user]
-    else:
-        resp = requests.get(f'{API}/users' if org is None else f'{API}/organizations/{org}/users', auth=auth)
+    if not hasattr(get_uid, 'cache'):
+        get_uid.cache = {}
+        resp = requests.get(f'{API}/users', auth=(token, ''))
         assert resp.status_code == 200, (resp.status_code, resp.json())
-        get_uid.users.update({u['nick']: u['id'] for u in resp.json()})
-        uid = get_uid.users[user]
+        get_uid.cache.update({u['nick']: u['id'] for u in resp.json()})
 
-    return uid
-
-get_uid.users = {}
+    return get_uid.cache[name]
 
 
 def get_events(conn):
@@ -67,11 +80,9 @@ def get_events(conn):
 get_events.Event = collections.namedtuple('Event', 'type data last_event_id')
 
 
+# `flow` is not support emoji ?
+
 def flow(token, org, flow):
-    r"""
-    -   not support emoji
-    -   support stream API
-    """
     auth = (token, '')
 
     def send(content, tags=None):
@@ -122,17 +133,13 @@ def flow(token, org, flow):
             assert resp.status_code == 200, (resp.status_code, resp.json())
             yield from get_events(resp)
             # TODO: parse the output of `get_events` for easy usage
+            # TODO: support `EventSource` interface, hook callbacks, which is easier to use
 
     return types.SimpleNamespace(**locals())
 
 
-def private_message(token, user, org=None):
-    r"""
-    -   cache user ID at module-level
-    -   use `{org}` if provided
-    """
+def private(token, uid):
     auth = (token, '')
-    uid = get_uid(auth, user, org)
 
     def send(content):
         resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, json={'event':'message','content':content})
@@ -160,49 +167,26 @@ def private_message(token, user, org=None):
     return types.SimpleNamespace(**locals())
 
 
-def integration(flow_token, org=None, flow=None):
+def integration(flow_token):
     r"""
     -   use `{org}/{flow}` if provided
     -   support partial function
     """
-    if org is None and flow is None:
-        obj = lambda org, flow: integration(flow_token, org, flow)
-        "less support"
-    elif org is not None and flow is not None:
-        obj = lambda: None
-        "more support"
-    else:
-        raise TypeError
-    return obj
+    return types.SimpleNamespace(**locals())
 
 
 def connect(**kw):
-    r"""
-    To connect flow::
-
-        connect(token='...', org='...', flow='...')
-        connect(token='...')(org='...', flow='...')
-
-    To connect private message::
-
-        connect(token='...', user='...')
-        connect(token='...')(user='...')
-        connect(token='...', org='...')(user='...')
-        connect(token='...', org='...', user='...')
-
-    To connect integration::
-
-        connect(flow_token='...')
-        connect(flow_token='...', org='...', flow='...')
-    """
-    if kw.keys() == {'token'} or kw.keys() == {'token', 'org'}:
-        # partial function
-        return lambda **kwargs: connect(**kw, **kwargs)
+    if kw.keys() == {'token'}:
+        partial = lambda **kwargs: connect(**kw, **kwargs)
+        partial.get_uid = lambda **kwargs: get_uid(**kw, **kwargs)
+        return partial
     elif kw.keys() == {'token', 'org', 'flow'}:
         return flow(**kw)
-    elif kw.keys() == {'token', 'user'} or kw.keys() == {'token', 'org', 'user'}:
-        return private_message(**kw)
-    elif kw.keys() == {'flow_token'} or kw.keys() == {'flow_token', 'org', 'flow'}:
+    elif kw.keys() == {'token', 'uid'}:
+        return private(**kw)
+    elif kw.keys() == {'token', 'name'}:
+        return private(token=kw['token'], uid=get_uid(**kw))
+    elif kw.keys() == {'flow_token'}:
         return integration(**kw)
     else:
         raise TypeError
