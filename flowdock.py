@@ -13,8 +13,8 @@ def get_uid(token, name) -> int:
     Get UID by display name.
 
     The dumped user data is formed as below.
-    Note that :prop:`nick` (i.e. "Display name" field in "Edit profile" page) is unique,
-    but :prop:`name` (i.e "Name" field in Edit profile" page) is not.
+    Note that ``nick`` (i.e. "Display name" field in "Edit profile" page) is unique,
+    but ``name`` (i.e "Name" field in "Edit profile" page) is not.
 
     Therefore, it is nothing different between searching with organization/flow or not.
 
@@ -43,7 +43,7 @@ def get_uid(token, name) -> int:
 
 def get_events(conn):
     """
-     Interprete and yield :cls:`Event` object according to `Server-sent events`__ .
+     Interprete and yield ``Event`` object according to `Server-sent events`__ .
 
     __ https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
     """
@@ -88,12 +88,12 @@ def flow(token, org, flow):
     def send(content, tags=None):
         json = {'event': 'message', 'content': content, 'tags': tags}
         resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=json)
-        assert resp.status_code == 201, (resp.status_code, resp.json())
+        assert resp.status_code == 201, (resp.status_code, resp.content)
         return resp.json()['id']
 
     def show(msg_id):
         resp = requests.get(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
+        assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
 
     def edit(msg_id, content=None, tags=None, override_tags=False):
@@ -116,11 +116,25 @@ def flow(token, org, flow):
             payload['tags'] = _tags + tags
 
         resp = requests.put(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth, json=payload)
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.content)
 
     def delete(msg_id):
         resp = requests.delete(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
+                (resp.status_code, resp.content)
+
+    def upload(file_path):
+        files = {'content': open(file_path,'rb')}
+        data = {'event': 'file'}
+        resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, files=files, data=data)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()['id']
+
+    def download(uri_path):
+        resp = requests.get(f'{API}/{uri_path}', auth=auth)
+        assert [r.status_code for r in resp.history] == [302], (uri_path, resp.history)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.content
 
     def list(**conditions):
         resp = requests.get(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=conditions)
@@ -143,25 +157,39 @@ def private(token, uid):
 
     def send(content):
         resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, json={'event':'message','content':content})
-        assert resp.status_code == 201, (resp.status_code, resp.json())
+        assert resp.status_code == 201, (resp.status_code, resp.content)
         return resp.json()['id']
 
     def show(msg_id):
         resp = requests.get(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
+        assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
 
     def edit(msg_id, content):
         resp = requests.put(f'{API}/private/{uid}/messages/{msg_id}', auth=auth, json={'content':content})
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.content)
 
     def delete(msg_id):
         resp = requests.delete(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
+                (resp.status_code, resp.content)
+
+    def upload(file_path):
+        files = {'content': open(file_path,'rb')}
+        data = {'event': 'file'}
+        resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, files=files, data=data)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()['id']
+
+    def download(uri_path):
+        resp = requests.get(f'{API}/{uri_path}', auth=auth)
+        assert [r.status_code for r in resp.history] == [302], (uri_path, resp.history)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.content
 
     def list(**conditions):
         resp = requests.get(f'{API}/private/{uid}/messages', auth=auth, json=conditions)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
+        assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
 
     return types.SimpleNamespace(**locals())
