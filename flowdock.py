@@ -86,8 +86,8 @@ def flow(token, org, flow):
     auth = (token, '')
 
     def send(content, tags=None):
-        json = {'event': 'message', 'content': content, 'tags': tags}
-        resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=json)
+        payload = {'event': 'message', 'content': content, 'tags': {} if tags is None else tags}
+        resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=payload)
         assert resp.status_code == 201, (resp.status_code, resp.content)
         return resp.json()['id']
 
@@ -96,24 +96,12 @@ def flow(token, org, flow):
         assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
 
-    def edit(msg_id, content=None, tags=None, override_tags=False):
-        """
-        -   at least edit `content` or `tags`
-        -   not allow modify starts with ':' tags
-        -   not allow override existing tags unless `overrride_tags` is True
-        -   by default, `override_tags` is False, and new tags will be appended to origin tags
-        """
-        if content is None and tags is None:
-            raise TypeError('at least edit `content` or `tags`')
-
+    def edit(msg_id, content=None, tags=None):
         payload = {}
         if content is not None:
             payload['content'] = content
         if tags is not None:
-            _tags = show(msg_id)['tags']
-            if override_tags:
-                _tags = [t for t in _tags if re.match(r'\W', t)]
-            payload['tags'] = _tags + tags
+            payload['tags'] = tags
 
         resp = requests.put(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth, json=payload)
         assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.content)
@@ -155,8 +143,9 @@ def flow(token, org, flow):
 def private(token, uid):
     auth = (token, '')
 
-    def send(content):
-        resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, json={'event':'message','content':content})
+    def send(content, tags=None):
+        payload = {'event': 'message', 'content': content, 'tags': {} if tags is None else tags}
+        resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, json=payload)
         assert resp.status_code == 201, (resp.status_code, resp.content)
         return resp.json()['id']
 
@@ -165,8 +154,14 @@ def private(token, uid):
         assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
 
-    def edit(msg_id, content):
-        resp = requests.put(f'{API}/private/{uid}/messages/{msg_id}', auth=auth, json={'content':content})
+    def edit(msg_id, content=None, tags=None):
+        payload = {}
+        if content is not None:
+            payload['content'] = content
+        if tags is not None:
+            payload['tags'] = tags
+
+        resp = requests.put(f'{API}/private/{uid}/messages/{msg_id}', auth=auth, json=payload)
         assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.content)
 
     def delete(msg_id):
