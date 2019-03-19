@@ -40,18 +40,22 @@ Here, we assume keys are stored in a Python file, say :mod:`test_tokens.py`.
     >>> from test_tokens import PERSONAL_API_TOKEN, FLOW_TOKEN
 
 To connect Flowdock with personal API token, simply invoke :func:`connect` to initialize a "client".
-Then you can "join" the different channels with the same client.
 
 .. code:: python
 
     >>> import flowdock
     >>> client = flowdock.connect(token=PERSONAL_API_TOKEN)
+
+With the client, you can "join" the different channels with the same client.
+
+.. code:: python
+
     >>> flow = client(org='hpe', flow='apua-flow')
     >>> private = client(uid=336968)
 
 The :code:`uid` above is "user ID", which can be found in the tail of a private channel URI.
 
-You can also get UID by user's display name ("Display name" field in `Edit profile`_ page) as below.
+You can get UID by user's display name ("Display name" field in `Edit profile`_ page) as below.
 
 .. _`edit profile`: https://www.flowdock.com/account/edit
 
@@ -66,6 +70,11 @@ For convenience, you can join a channel in one line:
 
     >>> flow = flowdock.connect(token=PERSONAL_API_TOKEN, org='hpe', flow='apua-flow')
     >>> private = flowdock.connect(token=PERSONAL_API_TOKEN, uid=336968)
+
+Also, you can simply give user's display name to get UID and then join the private channel in one line:
+
+.. code:: python
+
     >>> private = flowdock.connect(token=PERSONAL_API_TOKEN, name='Ray_')
 
 Connecting Flowdock with flow token is similar with personal API token;
