@@ -171,8 +171,7 @@ Those methods are supported in private channels as well.
 Tag
 ------------------------------
 
-To send a message with tags in a flow, set keyword argument ``tags`` to :meth:`send`;
-to override the tags of an existing message, set keyword argument ``tags`` to :meth:`edit`.
+To send a message with tags in a flow, set keyword argument ``tags`` to :meth:`send`.
 
 .. code:: python
 
@@ -180,11 +179,16 @@ to override the tags of an existing message, set keyword argument ``tags`` to :m
     >>> flow.show(msg_id)['tags']
     ['ref', ':user:team', ':url']
 
+To override the tags of an existing message, set keyword argument ``tags`` to :meth:`edit`.
+In this case, you don't have to be the author.
+
+.. code:: python
+
     >>> flow.edit(msg_id, tags=['ref', ':user:team', 'important', ':url'])
     >>> flow.show(msg_id)['tags']
     ['ref', ':user:team', 'important', ':url']
 
-You can edit both content and tags at the same time:
+You can edit both content and tags at the same time; in this case, you have to be the author.
 
 .. code:: python
 
