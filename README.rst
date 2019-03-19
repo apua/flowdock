@@ -225,7 +225,12 @@ It is supported in private channels as well.
 Emoji
 ------------------------------
 
-.. flow only
+Unfortunately, till now Flowdock does not provide API for Emoji.
+
+A possible solution is emulating browser behavior to login with password, create web socket connection,
+and then communicate with Flowdock server to ask change Emoji.
+It is too complicated, besides, user should not provide their password on chatbot;
+that's why this library does not provide Emoji support, either.
 
 
 Thread

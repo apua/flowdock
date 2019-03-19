@@ -80,8 +80,6 @@ def get_events(conn):
 get_events.Event = collections.namedtuple('Event', 'type data last_event_id')
 
 
-# `flow` is not support emoji ?
-
 def flow(token, org, flow):
     auth = (token, '')
 
