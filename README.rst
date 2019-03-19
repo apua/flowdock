@@ -92,7 +92,7 @@ To send message in a flow, invoke :meth:`send` of the channel.
 
 .. code:: python
 
-    >>> msg_id = flow.send('a message')
+    >>> msg_id = flow.send('a message')['id']
 
 To edit/delete a message, invoke :meth:`edit`/:meth:`delete`;
 to verify the messages, invoke :meth:`get` to get message properties.
@@ -114,7 +114,7 @@ Those methods are supported in private channels as well.
 
 .. code:: python
 
-    >>> msg_id = private.send('a message')
+    >>> msg_id = private.send('a message')['id']
     >>> private.show(msg_id)['content']
     'a message'
 
@@ -136,7 +136,7 @@ to download the file, get URI path by :meth:`show` and then invoke :meth:`downlo
 .. code:: python
 
     >>> file_path = './README.rst'
-    >>> msg_id = flow.upload(file_path)
+    >>> msg_id = flow.upload(file_path)['id']
     >>> msg_content = flow.show(msg_id)['content']
     >>> msg_content['file_name']
     'README.rst'
@@ -154,7 +154,7 @@ Those methods are supported in private channels as well.
 .. code:: python
 
     >>> file_path = './README.rst'
-    >>> msg_id = private.upload(file_path)
+    >>> msg_id = private.upload(file_path)['id']
     >>> msg_content = private.show(msg_id)['content']
     >>> msg_content['file_name']
     'README.rst'
@@ -176,7 +176,7 @@ to override the tags of an existing message, set keyword argument ``tags`` to :m
 
 .. code:: python
 
-    >>> msg_id = flow.send('@team, ref here: http://docs.python.org', tags=['ref'])
+    >>> msg_id = flow.send('@team, ref here: http://docs.python.org', tags=['ref'])['id']
     >>> flow.show(msg_id)['tags']
     ['ref', ':user:team', ':url']
 
@@ -222,7 +222,7 @@ It is supported in private channels as well.
 
 .. code:: python
 
-    >>> msg_id = private.send('ref here: http://docs.python.org', tags=['ref'])
+    >>> msg_id = private.send('ref here: http://docs.python.org', tags=['ref'])['id']
     >>> private.show(msg_id)['tags']
     [':unread:336968', 'ref', ':url']
 
@@ -234,18 +234,28 @@ It is supported in private channels as well.
 Emoji
 ------------------------------
 
-Unfortunately, till now Flowdock does not provide API for Emoji.
+Unfortunately, till now Flowdock does not provide API for emoji.
 
 A possible solution is emulating browser behavior to login with password, create web socket connection,
-and then communicate with Flowdock server to ask change Emoji.
+and then communicate with Flowdock server to ask change emoji.
 It is too complicated, besides, user should not provide their password on chatbot;
-that's why this library does not provide Emoji support, either.
+that's why this library does not provide emoji support, either.
 
 
 Thread
 ------------------------------
 
-.. reply (get thread id)  # `external_thread_id` ?
+Every message sent in a flow has a thread ID;
+to send message onto the thread, set keyword argument ``thread_id`` to :meth:`send`.
+
+.. code:: python
+
+    >>> msg1 = flow.send('Thread start')
+    >>> msg2 = flow.send('A message in the thread', thread_id=msg1['thread_id'])
+    >>> assert msg1['thread_id'] == msg2['thread_id']
+
+Like emoji, Flowdock does not provide API to re-thread a sent message with a given thread ID.
+It cannot re-thread a sent message via :meth:`edit`, either.
 
 
 Present External Item
@@ -266,5 +276,6 @@ List
 
 .. text search and tagged -- search x tags x tags_mode x skip x limit
 .. file and activitie -- event x sort x since_id x until_id x limit
-.. list threads and list messages in given thread
+.. list threads
+.. list messages in given thread
 .. link and email

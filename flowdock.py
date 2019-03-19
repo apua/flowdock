@@ -83,11 +83,11 @@ get_events.Event = collections.namedtuple('Event', 'type data last_event_id')
 def flow(token, org, flow):
     auth = (token, '')
 
-    def send(content, tags=None):
-        payload = {'event': 'message', 'content': content, 'tags': {} if tags is None else tags}
+    def send(content, tags=None, thread_id=None):
+        payload = {'event': 'message', 'content': content, 'tags': tags, 'thread_id': thread_id}
         resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=payload)
         assert resp.status_code == 201, (resp.status_code, resp.content)
-        return resp.json()['id']
+        return resp.json()
 
     def show(msg_id):
         resp = requests.get(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
@@ -114,7 +114,7 @@ def flow(token, org, flow):
         data = {'event': 'file'}
         resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, files=files, data=data)
         assert resp.status_code == 201, (resp.status_code, resp.content)
-        return resp.json()['id']
+        return resp.json()
 
     def download(uri_path):
         resp = requests.get(f'{API}/{uri_path}', auth=auth)
@@ -142,10 +142,10 @@ def private(token, uid):
     auth = (token, '')
 
     def send(content, tags=None):
-        payload = {'event': 'message', 'content': content, 'tags': {} if tags is None else tags}
+        payload = {'event': 'message', 'content': content, 'tags': tags}
         resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, json=payload)
         assert resp.status_code == 201, (resp.status_code, resp.content)
-        return resp.json()['id']
+        return resp.json()
 
     def show(msg_id):
         resp = requests.get(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
@@ -172,7 +172,7 @@ def private(token, uid):
         data = {'event': 'file'}
         resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, files=files, data=data)
         assert resp.status_code == 201, (resp.status_code, resp.content)
-        return resp.json()['id']
+        return resp.json()
 
     def download(uri_path):
         resp = requests.get(f'{API}/{uri_path}', auth=auth)
