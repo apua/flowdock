@@ -82,7 +82,7 @@ the flow token bound to an individual flow is not required to specify flow.
 
 .. code:: python
 
-    >>> integration = flowdock.connect(flow_token=FLOW_TOKEN)
+    >>> external_service = flowdock.connect(flow_token=FLOW_TOKEN)
 
 
 Message
@@ -259,15 +259,63 @@ to send message onto the thread, set keyword argument ``thread_id`` to :meth:`se
     >>> assert msg1['thread_id'] == msg2['thread_id']
 
 Like emoji, Flowdock does not provide API to re-thread a sent message with a given thread ID.
-It cannot re-thread a sent message via :meth:`edit`, either.
+It cannot re-thread a sent message by :meth:`edit`, either.
 
 
-Present External Item
+Present External Service Item
 ------------------------------
 
-.. update item states w/wo item detail as a thread
-.. describe item detail
-.. reply onto item (both user and bot)
+Flowdock can integrate external services, e.g. Trello, onto Flowdock Inbox,
+so that you can track item status, user activities, and discussion on the item.
+
+.. image::
+
+Those data maitained on the external servicesa are treated as items, every item has its ID and name.
+
+.. code:: python
+
+    >>> id_01 = 'ITEM-01'
+    >>> item_01 = {'title': 'Item 01'}
+
+To present a user activity or discussion on the item requires define a user (``author``) first.
+
+.. code:: python
+
+    >>> ray = {'name': 'Ray'}
+
+With given item and user, you can present an activity or discussion by :meth:`present`.
+To present an activity, it requires only the activity description (``title``);
+to present a discusion, it requires not only the discussion content (``body``)
+but also the description of discussion itself, e.g. "comment".
+
+.. code:: python
+
+    >>> external_service.present(id_01, author=ray, title='created item', thread=item_01)
+    >>> external_service.present(id_01, author=ray, title='commented', body='The comment', thread=item_01)
+
+The expected result is as below;
+
+.. image::
+    :alt: basic expected result shows the presented item name, user created item, and user discuss
+
+There are some notes here:
+
+-   "ExternalService" shown in the figure is the integration name rather than the external service name,
+    thus it is recommended to set integration name the same as external service name.
+    Refer to `Developer Applications`_ in section `Prior Knowledge`_.
+
+-   Activities is just like item history,
+    therefore, each updating item operation should be presented with an activity.
+
+-   If a item has been presented before and nothing changed, then it can be presented with only item id,
+    for example, discussion.
+
+    .. code:: python
+
+        >>> external_service.present(id_01, author=ray, title='commented', body='More comment')
+
+-   In the other side, the items, which aren't presented before and don't have both activites and discussion
+    after integration added, are not shown in Flowdock.
 
 
 Monitor Flow

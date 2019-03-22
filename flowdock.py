@@ -96,8 +96,10 @@ def flow(token, org, flow):
 
     def edit(msg_id, content=None, tags=None):
         payload = {}
+
         if content is not None:
             payload['content'] = content
+
         if tags is not None:
             payload['tags'] = tags
 
@@ -154,8 +156,10 @@ def private(token, uid):
 
     def edit(msg_id, content=None, tags=None):
         payload = {}
+
         if content is not None:
             payload['content'] = content
+
         if tags is not None:
             payload['tags'] = tags
 
@@ -189,10 +193,33 @@ def private(token, uid):
 
 
 def integration(flow_token):
-    r"""
-    -   use `{org}/{flow}` if provided
-    -   support partial function
-    """
+    def user(name, avatar=None):
+        return types.SimpleNamespace(**locals())
+
+    def item(title, body=None, fields=None, status=None, external_url=None, actions=None):
+        return types.SimpleNamespace(**locals())
+
+    def present(id, author, title, body=None, thread=None):
+        if isinstance(author, types.SimpleNamespace):
+            author = vars(author)
+
+        if isinstance(thread, types.SimpleNamespace):
+            thread = vars(thread)
+
+        payload = {'flow_token': flow_token, 'external_thread_id': id, 'author': author, 'title': title}
+
+        if body is None:
+            payload['event'] = 'activity'
+        else:
+            payload['event'] = 'discussion'
+            payload['body'] = body
+
+        if thread is not None:
+            payload['thread'] = thread
+
+        resp = requests.post(f'{API}/messages', json=payload)
+        assert resp.status_code == 202 and not resp.json(), (resp.status_code, resp.content)
+
     return types.SimpleNamespace(**locals())
 
 
