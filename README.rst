@@ -3,11 +3,26 @@ Flowdock API wrapper
 ====================
 
 :Official API Document: https://www.flowdock.com/api
-:Official API Document Repository: https://github.com/flowdock/api-docs
 
-The origin Flowdock API document is outdate.
-This tool aim to be an intuitive wrapper summarizes the usage.
 
+This API wrapper aim to summarize Flowdock API usage with intuitive implementation,
+so that creating a chatbot, Flowdock integration, or monitor, are going to be simpler.
+
+The following content describes `prior knowledge`_ and the `API wrapper usage`_.
+
+
+
+Prior Knowledge
+====================
+
+.. what basic API can do, require personal token
+.. what integration API can do, require flow token for external service
+    .. https://www.flowdock.com/oauth/applications
+.. what monitor API can do
+.. terminology: personal token, flow token, external service, server-sent event
+
+
+.. _`API wrapper usage`:
 
 Usage
 ====================
