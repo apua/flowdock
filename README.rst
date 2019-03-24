@@ -265,7 +265,8 @@ It is supported in private channels as well.
 Emoji
 ------------------------------
 
-Unfortunately, till now Flowdock does not provide API for emoji.
+Unfortunately, invoking :meth:`send` and :meth:`edit` to set emoji doesn't work;
+Flowdock doesn't provide API for emoji, either.
 
 A possible solution is emulating browser behavior to login with password, create web socket connection,
 and then communicate with Flowdock server to ask change emoji.
@@ -285,8 +286,8 @@ to send message onto the thread, set keyword argument ``thread_id`` to :meth:`se
     >>> msg2 = flow.send('A message in the thread', thread_id=msg1['thread_id'])
     >>> assert msg1['thread_id'] == msg2['thread_id']
 
-Like emoji, Flowdock does not provide API to re-thread a sent message with a given thread ID.
-It cannot re-thread a sent message by :meth:`edit`, either.
+Like emoji, invoking :meth:`edit` to re-thread a sent message doesn't work;
+Flowdock doesn't provide API for re-threading, either.
 
 
 Integration
