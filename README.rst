@@ -277,31 +277,34 @@ Like emoji, Flowdock does not provide API to re-thread a sent message with a giv
 It cannot re-thread a sent message by :meth:`edit`, either.
 
 
-Present External Service Item
+Integration
 ------------------------------
+
+Present an External Service Item
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Flowdock can integrate external services, e.g. Trello, onto Flowdock Inbox,
 so that you can track item status, user activities, and discussion on the item.
 
 .. image::
 
-Those data maitained on the external servicesa are treated as items, every item has its ID and name.
+Those data maitained on the external servicesa are treated as items, every item has its ID and name, as shown below:
 
 .. code:: python
 
     >>> id_01 = 'ITEM-01'
     >>> item_01 = {'title': 'Item 01'}
 
-To present a user activity or discussion on the item requires define a user (``author``) first.
+To present a user activity or discussion on the item requires define a user first.
 
 .. code:: python
 
     >>> ray = {'name': 'Ray'}
 
-With given item and user, you can present an activity or discussion by :meth:`present`.
-To present an activity, it requires only the activity description (``title``);
-to present a discusion, it requires not only the discussion content (``body``)
-but also the description of discussion itself, e.g. "comment".
+With given ``thread`` for item and ``author`` for user, you can present an activity or discussion by :meth:`present`.
+To present an activity, it requires only ``title`` for the activity description;
+to present a discusion, it requires not only ``title`` for the description of discussion itself
+(e.g. "comment") but also ``body`` for the discussion content.
 
 .. code:: python
 
@@ -317,7 +320,7 @@ There are some notes here:
 
 -   "ExternalService" shown in the figure is the integration name rather than the external service name,
     thus it is recommended to set integration name the same as external service name.
-    Refer to `Developer Applications`_ in section `Prior Knowledge`_.
+    Refer to `Developer Applications`_ in section `Prior Knowledge`_. [*]_
 
 -   Activities is just like item history,
     therefore, each updating item operation should be presented with an activity.
@@ -333,16 +336,61 @@ There are some notes here:
     after integration added, are not shown in Flowdock.
 
 
-Monitor Flow
-------------------------------
+Check Presented Items
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After presenting an activity or discussion, Flowdock API will not return the resource ID of activity or discussion.
+A workaround is invoking :meth:`list` to find the latest activity or discussion event immediately.
+Of course, it requires PERSONAL_API_TOKEN as described in section above. [*]_
+
+.. code:: python
+
+    >>> external_service.present(id_01, author=ray, title='commented', body='Comment again')
+    >>> flow.list(limit=1).pop()['body']
+    'Comment again'
+
+If one considers there are meesages sent during presenting and checking, a solution is restricting the conditions.
+However, it requires to determine which events it presented -- activity or discussion.
+
+.. code:: python
+
+    >>> external_service.present(id_01, author=ray, title='touched item')
+    >>> external_service.present(id_01, author=ray, title='commented', body='I just touch the item')
+    >>> flow.list(event='activity', limit=1).pop()['title']
+    'touched item'
+    >>> flow.list(event='discussion', limit=1).pop()['body']
+    'I just touch the item'
 
 
-List
-------------------------------
+Tag, Reply, and Delete a Presented Item
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Flowdock allows user to tag and reply an presented item, just like tag and reply a message.
 
-.. text search and tagged -- search x tags x tags_mode x skip x limit
-.. file and activitie -- event x sort x since_id x until_id x limit
-.. list threads
-.. list messages in given thread
-.. link and email
+.. code:: python
+
+    >>> disc = flow.list(event='discussion', limit=1).pop()
+    >>> flow.edit(disc['id'], tags=['idea'])
+    >>> flow.show(disc['id'])['tags']
+    ['idea']
+
+    >>> msg = flow.send('Reply the other idea', thread_id=disc['thread_id'])
+    >>> replied = flow.show(msg['id'])
+    >>> replied['thread_id'] == disc['thread_id']
+    True
+    >>> replied['content']
+    'Reply the other idea'
+
+Flowdock allows user to delete an presented item, too, just like delete a message. [*]_
+
+.. code:: python
+
+    >>> flow.delete(disc['id'])
+    >>> flow.show(disc['id'])
+    Traceback (most recent call last):
+      ...
+    AssertionError: (404, b'{"message":"not found"}')
+
+.. [*] It seems anyone in the channel has privilege to delete activities and discussions.
+       If so, it is dangerous because that deleted activities or discussions are hard to retrieve again.
+       Moreover, in general, there is no need to delete them.
