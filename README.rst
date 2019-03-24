@@ -11,6 +11,18 @@ so that creating a chatbot, Flowdock integration, or monitor, are going to be si
 The following content describes `prior knowledge`_ and the `API wrapper usage`_.
 
 
+.. new structure of the document, aka outline:
+
+    A few parts:
+        PERSONAL_API_TOKEN for identical user and further operations
+        FLOW_TOKEN for external services bound to a flow channel
+        Monitor -- based on identical user to handle server-sent event
+
+    Every part provides keywords reference
+    Every part starts with a feature overview and then introduce wrapped API usage with examples
+    Finally summarize terminology; no need to provide whole references in one place
+
+
 
 Prior Knowledge
 ====================
