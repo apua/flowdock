@@ -1,5 +1,5 @@
 import collections
-import re
+import json
 import types
 
 import requests
@@ -19,7 +19,7 @@ def get_uid(token, name) -> int:
     Therefore, it is nothing different between searching with organization/flow or not.
 
     This function also cache user ``nick - id`` mapping.
-    It is reasonable because of less adding users and expensive fetching data.
+    It is reasonable because adding users is infrequent and fetching data is expensive.
 
     .. code:: json
 
@@ -27,7 +27,7 @@ def get_uid(token, name) -> int:
             "id": 336968,
             "nick": "Ray_",
             "email": "ray.zhu@hpe.com",
-            "avatar": "https://d2cxspbh1aoie1.cloudfront.net/avatars/local/4965d1f57b777771d2baf1a71dccaa9a61d0c6050d9b37d5e58380cdff56d813/",
+            "avatar": "http://somewhere.public/ray.png",
             "name": "Ray Zhu",
             "website": null
         }
@@ -48,6 +48,7 @@ def get_events(conn):
     __ https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
     """
     buffer = types.SimpleNamespace(event_type='', data='', last_event_id='')
+    Event = collections.namedtuple('Event', 'type data last_event_id')
 
     def process_field(field_name, value: str):
         if field_name == 'event':
@@ -58,14 +59,14 @@ def get_events(conn):
             if '\x00' not in value:
                 buffer.last_event_id = value
         elif field_name == 'retry':
-            raise NotImplementedError('cannot set reconnection time')
+            raise NotImplementedError
         else:
             pass
 
     for line in map(bytes.decode, conn.iter_lines()):
         if not line:
             if buffer.data:
-                yield get_events.Event(buffer.event_type, buffer.data, buffer.last_event_id)
+                yield Event(buffer.event_type, buffer.data, buffer.last_event_id)
             buffer.event_type = buffer.data = ''
         elif line.startswith(':'):
             pass
@@ -76,8 +77,6 @@ def get_events(conn):
         else:
             field_name = line
             process_field(field_name, '')
-
-get_events.Event = collections.namedtuple('Event', 'type data last_event_id')
 
 
 def flow(token, org, flow):
@@ -141,9 +140,7 @@ def flow(token, org, flow):
         with requests.get(f'{STREAM}/flows/{org}/{flow}', auth=auth,
                           headers={'Accept':'text/event-stream'}, stream=True) as resp:
             assert resp.status_code == 200, (resp.status_code, resp.content)
-            yield from get_events(resp)
-            # TODO: parse the output of `get_events` for easy usage
-            # TODO: support `EventSource` interface, hook callbacks, which is easier to use
+            yield from (json.loads(e.data) for e in get_events(resp))
 
     return types.SimpleNamespace(**locals())
 

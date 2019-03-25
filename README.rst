@@ -277,7 +277,11 @@ that's why this library does not provide emoji support, either.
 List
 ------------------------------
 
-...
+.. text search and tagged -- search x tags x tags_mode x skip x limit
+.. file and activitie -- event x sort x since_id x until_id x limit
+.. list threads
+.. list messages in given thread
+.. link and email
 
 
 Thread
@@ -432,8 +436,7 @@ one can assure the last activity/discussion is sent by themselves.
     >>> item['external_url'] = uri
     >>> external_service.present(item_id, author=ray, title='touched item', thread=item)
     >>> thread = next(t for t in flow.threads() if t['external_url']==uri)
-    >>> act = flow.thread(thread['id']).list(event='activity').pop()
-    >>> act['title']
+    >>> flow.thread(thread['id']).list(event='activity').pop()['title']
     'touched item'
 
 
@@ -579,3 +582,29 @@ About ``actions``, refer to pages of Flowdock API documents for more information
 .. [*] ``UpdateAction`` defines how Flowdock send HTTP requests to the external service.
        It will not work if external services are in private network;
        in this case, consider ``ViewAction`` for workaround.
+
+
+Monitor Events
+------------------------------
+
+.. code:: python
+
+    >>> import threading, time
+    ...
+    >>> def sleep_and_send_message():
+    ...     time.sleep(1)
+    ...     flow.send('1 second latter')
+    ...
+    >>> threading.Thread(target=sleep_and_send_message).start()
+    >>> e = next(flow.events())
+    >>> e['content']
+    '1 second latter'
+
+
+Other Not Supported
+------------------------------
+
+Sources -- Not support because not useful and only one times
+Private conversations -- Unnecessary
+Invitations -- only works for admin
+Flow itself and thread itself -- Unnecessary
