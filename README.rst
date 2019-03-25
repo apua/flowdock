@@ -293,20 +293,37 @@ Flowdock doesn't provide API for re-threading, either.
 Integration
 ------------------------------
 
-Present an External Service Item
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. image:: Flowdock\ Inbox.png
+    :alt: Flowdock Inbox overview
 
 Flowdock can integrate external services, e.g. Trello, onto Flowdock Inbox,
 so that you can track item status, user activities, and discussion on the item.
 
-.. image::
+Refer to Flowdock API documents below to understand the relationship between items and Flowdock threads,
+and activities/discussions of an items.
+
+Getting started:
+https://www.flowdock.com/api/integration-getting-started#/getting-started
+
+The components of an integration message:
+https://www.flowdock.com/api/integration-getting-started#/components-of-a-message
+
+Message types ("activity" and "discussion"):
+https://www.flowdock.com/api/integration-getting-started#/message-types
+
+Authorize your app with OAuth:
+https://www.flowdock.com/api/production-integrations#/oauth2-authorize
+
+
+Present an External Service Item
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Those data maitained on the external servicesa are treated as items, every item has its ID and name, as shown below:
 
 .. code:: python
 
-    >>> id_01 = 'ITEM-01'
-    >>> item_01 = {'title': 'Item 01'}
+    >>> item_id = 'ITEM-01'
+    >>> item = {'title': 'Item 01'}
 
 To present a user activity or discussion on the item requires define a user first.
 
@@ -321,32 +338,28 @@ to present a discusion, it requires not only ``title`` for the description of di
 
 .. code:: python
 
-    >>> external_service.present(id_01, author=ray, title='created item', thread=item_01)
-    >>> external_service.present(id_01, author=ray, title='commented', body='The comment', thread=item_01)
+    >>> external_service.present(item_id, author=ray, title='created item', thread=item)
+    >>> external_service.present(item_id, author=ray, title='commented', body='The comment', thread=item)
 
-The expected result is as below;
+The expected result is as below.
+Note that "ExternalService" shown in the figure is the integration name rather than the external service name,
+thus it is recommended to set integration name the same as external service name.
 
-.. image::
-    :alt: basic expected result shows the presented item name, user created item, and user discuss
+.. image:: basic\ expected\ result.png
+    :alt: basic expected result shows the presented item name, a user created item, and discussion
 
-There are some notes here:
+Activities is just like the item history,
+therefore, each updating item operation should be presented with an activity.
 
--   "ExternalService" shown in the figure is the integration name rather than the external service name,
-    thus it is recommended to set integration name the same as external service name.
-    Refer to `Developer Applications`_ in section `Prior Knowledge`_. [*]_
+If a item has been presented before and nothing changed, then it can be presented with only item id,
+for example, discussion.
 
--   Activities is just like item history,
-    therefore, each updating item operation should be presented with an activity.
+.. code:: python
 
--   If a item has been presented before and nothing changed, then it can be presented with only item id,
-    for example, discussion.
+    >>> external_service.present(item_id, author=ray, title='commented', body='More comment')
 
-    .. code:: python
-
-        >>> external_service.present(id_01, author=ray, title='commented', body='More comment')
-
--   In the other side, the items, which aren't presented before and don't have both activites and discussion
-    after integration added, are not shown in Flowdock.
+In the other side, the items, which aren't presented before and don't have both activites and discussion
+after integration added, are not shown in Flowdock.
 
 
 Check Presented Items
@@ -354,11 +367,10 @@ Check Presented Items
 
 After presenting an activity or discussion, Flowdock API will not return the resource ID of activity or discussion.
 A workaround is invoking :meth:`list` to find the latest activity or discussion event immediately.
-Of course, it requires PERSONAL_API_TOKEN as described in section above. [*]_
 
 .. code:: python
 
-    >>> external_service.present(id_01, author=ray, title='commented', body='Comment again')
+    >>> external_service.present(item_id, author=ray, title='commented', body='Comment again')
     >>> flow.list(limit=1).pop()['body']
     'Comment again'
 
@@ -367,12 +379,28 @@ However, it requires to determine which events it presented -- activity or discu
 
 .. code:: python
 
-    >>> external_service.present(id_01, author=ray, title='touched item')
-    >>> external_service.present(id_01, author=ray, title='commented', body='I just touch the item')
+    >>> external_service.present(item_id, author=ray, title='touched item')
+    >>> external_service.present(item_id, author=ray, title='commented', body='I just touch the item')
     >>> flow.list(event='activity', limit=1).pop()['title']
     'touched item'
     >>> flow.list(event='discussion', limit=1).pop()['body']
     'I just touch the item'
+
+Final solution is the most stable way, but a little complicated.
+First, ``thread`` allow an optional key ``external_url`` which means the item URI actually.
+Set it before sending, then filter it from threads.
+The last event, no matter it is activity or discussion, should be the one you just send.
+
+.. code:: python
+
+    >>> uri = f'https://external.service/item/{item_id}'
+    >>> item['external_url'] = uri
+    >>> external_service.present(item_id, author=ray, title='touched item', thread=item)
+    >>> #flow.thread()  # filter and ...
+
+An important thing is, ``thread_id`` maps to item ID one-to-one, but has not the same value with item ID.
+To retrieve item ID from thread, it is recommanded to set key ``external_url`` everytime,
+see the example in `Construct author and thread`_.
 
 
 Tag, Reply, and Delete a Presented Item
@@ -383,18 +411,10 @@ Flowdock allows user to tag and reply an presented item, just like tag and reply
 .. code:: python
 
     >>> disc = flow.list(event='discussion', limit=1).pop()
-    >>> flow.edit(disc['id'], tags=['idea'])
-    >>> flow.show(disc['id'])['tags']
-    ['idea']
+    >>> flow.edit(disc['id'], tags=['idea'])  # tag the discussion
+    >>> msg = flow.send('Reply the other idea', thread_id=disc['thread_id'])  # reply the discussion
 
-    >>> msg = flow.send('Reply the other idea', thread_id=disc['thread_id'])
-    >>> replied = flow.show(msg['id'])
-    >>> replied['thread_id'] == disc['thread_id']
-    True
-    >>> replied['content']
-    'Reply the other idea'
-
-Flowdock allows user to delete an presented item, too, just like delete a message. [*]_
+Flowdock allows user to delete an presented item, too, just like delete a message. [*]_ [*]_
 
 .. code:: python
 
@@ -404,6 +424,124 @@ Flowdock allows user to delete an presented item, too, just like delete a messag
       ...
     AssertionError: (404, b'{"message":"not found"}')
 
+.. [*] If all activities/discussions are deleted, the thread of item will be hidden on Flowdock.
+       However, it can still found by thread API.
+
 .. [*] It seems anyone in the channel has privilege to delete activities and discussions.
        If so, it is dangerous because that deleted activities or discussions are hard to retrieve again.
        Moreover, in general, there is no need to delete them.
+
+
+Construct ``author`` and ``thread``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In `Present an External Service Item`_, an example shows how to construct data,
+which has some disadvantages during development:
+
+-   Don't know which keys are necessary.
+-   Don't remember the name of the keys.
+-   May have typo not found until verifying on browser.
+
+One can know which names are required by :meth:`present` already:
+
+.. code:: python
+
+    >>> help(external_service.present)
+    Help on function present in module flowdock:
+    <BLANKLINE>
+    present(id, author, title, body=None, thread=None)
+    <BLANKLINE>
+
+Here, this wrapper provides constructors for data structure hints.
+
+.. code:: python
+
+    >>> from flowdock import constructors as new
+    >>> help(new.author)
+    Help on function author in module flowdock:
+    <BLANKLINE>
+    author(name, avatar=None)
+    <BLANKLINE>
+    >>> ray = new.author('Ray', avatar='http://somewhere.public/ray.png')
+    >>> item = new.thread('Item 01')
+
+For item description, ``thread`` data structure is complex. See example below. [*]_ [*]_
+
+The origin data:
+
+.. code:: python
+
+    >>> item = {
+    ...     'title': 'Item 01',
+    ...     'external_url': 'https://external.service/item/ITEM-01',
+    ...     'body': '<strong>The detail of the item here....</strong>',
+    ...     'fields': [{'label': 'a', 'value': '1'}, {'label': '<a>b</a>', 'value': '<a>2</a>'}],
+    ...     'status': {'color': 'green', 'value': 'TODO'},
+    ...     'actions': [
+    ...         {
+    ...             "@type": "ViewAction",
+    ...             "name": "Diff",
+    ...             "url": "https://github.com/flowdock/component/pull/42/files",
+    ...         },
+    ...         {
+    ...             '@type': 'UpdateAction',
+    ...             'name': 'Assign to me',
+    ...             'target': {
+    ...                 '@type': 'EntryPoint',
+    ...                 'urlTemplate': 'https://external.service/item/ITEM-01?assign=me',
+    ...                 'httpMethod': 'POST',
+    ...             },
+    ...         },
+    ...     ],
+    ... }
+
+By constrcutors:
+
+.. code:: python
+
+    >>> item_id = 'ITEM-01'
+    >>> uri = f'https://external.service/item/{item_id}'
+    >>> item = new.thread(
+    ...     'Item 01',
+    ...     external_url = uri,
+    ...     body = '<strong>The detail of the item here....</strong>',
+    ...     fields = [new.field(label='a', value='1'), new.field(label='<a>b</a>', value='<a>2</a>')],
+    ...     status = new.status(color='green', value='TODO'),
+    ...     actions = [
+    ...         {
+    ...             "@type": "ViewAction",
+    ...             "name": "Diff",
+    ...             "url": "https://github.com/flowdock/component/pull/42/files",
+    ...         },
+    ...         {
+    ...             '@type': 'UpdateAction',
+    ...             'name': 'Assign to me',
+    ...             'target': {
+    ...                 '@type': 'EntryPoint',
+    ...                 'urlTemplate': f'{uri}?assign=me',
+    ...                 'httpMethod': 'POST',
+    ...             },
+    ...         },
+    ...     ],
+    ... )
+
+Supported status colors are as below; constructor ``status`` could validate the supported colors.
+
+.. code:: python
+
+    >>> item['status'] = new.status(color='not supported color', value='...')
+    Traceback (most recent call last):
+    ...
+    TypeError: valid colors: black, blue, cyan, green, grey, lime, orange, purple, red, yellow
+
+About ``actions``, refer to pages of Flowdock API documents for more information:
+
+       -    https://www.flowdock.com/api/thread-actions
+       -    https://www.flowdock.com/api/how-to-create-bidirectional-integrations
+
+.. [*] There is no further constructor for ``actions`` because its data structure is flexible
+       and would be bound to external services just like ``external_url``.
+
+.. [*] ``UpdateAction`` defines how Flowdock send HTTP requests to the external service.
+       It will not work if external services are in private network;
+       in this case, consider ``ViewAction`` for workaround.

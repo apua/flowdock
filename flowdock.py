@@ -193,19 +193,7 @@ def private(token, uid):
 
 
 def integration(flow_token):
-    def user(name, avatar=None):
-        return types.SimpleNamespace(**locals())
-
-    def item(title, body=None, fields=None, status=None, external_url=None, actions=None):
-        return types.SimpleNamespace(**locals())
-
     def present(id, author, title, body=None, thread=None):
-        if isinstance(author, types.SimpleNamespace):
-            author = vars(author)
-
-        if isinstance(thread, types.SimpleNamespace):
-            thread = vars(thread)
-
         payload = {'flow_token': flow_token, 'external_thread_id': id, 'author': author, 'title': title}
 
         if body is None:
@@ -221,6 +209,26 @@ def integration(flow_token):
         assert resp.status_code == 202 and not resp.json(), (resp.status_code, resp.content)
 
     return types.SimpleNamespace(**locals())
+
+
+class constructors:
+    def __new__(*a, **kw):
+        raise TypeError('it is not callable')
+
+    def author(name, avatar=None):
+        return locals()
+
+    def thread(title, body=None, fields=None, status=None, external_url=None, actions=None):
+        return locals()
+
+    def field(label, value):
+        return locals()
+
+    def status(color, value):
+        if color not in __class__.status.colors:
+            raise TypeError(f'valid colors: {", ".join(__class__.status.colors)}')
+        return {'color': color, 'value': value}
+    status.colors = ('black', 'blue', 'cyan', 'green', 'grey', 'lime', 'orange', 'purple', 'red', 'yellow')
 
 
 def connect(**kw):
