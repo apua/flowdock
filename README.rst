@@ -293,7 +293,7 @@ Flowdock doesn't provide API for re-threading, either.
 Integration
 ------------------------------
 
-.. image:: Flowdock\ Inbox.png
+.. image:: https://github.com/apua/flowdock/raw/re-write/Flowdock%20Inbox.png
     :alt: Flowdock Inbox overview
 
 Flowdock can integrate external services, e.g. Trello, onto Flowdock Inbox,
@@ -345,7 +345,7 @@ The expected result is as below.
 Note that "ExternalService" shown in the figure is the integration name rather than the external service name,
 thus it is recommended to set integration name the same as external service name.
 
-.. image:: basic\ expected\ result.png
+.. image:: https://github.com/apua/flowdock/raw/re-write/basic%20expected%20result.png
     :alt: basic expected result shows the presented item name, a user created item, and discussion
 
 Activities is just like the item history,
