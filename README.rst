@@ -274,17 +274,46 @@ It is too complicated, besides, user should not provide their password on chatbo
 that's why this library does not provide emoji support, either.
 
 
+List
+------------------------------
+
+...
+
+
 Thread
 ------------------------------
 
-Every message sent in a flow has a thread ID;
-to send message onto the thread, set keyword argument ``thread_id`` to :meth:`send`.
+Every message sent to a flow belongs to a thread:
 
 .. code:: python
 
-    >>> msg1 = flow.send('Thread start')
-    >>> msg2 = flow.send('A message in the thread', thread_id=msg1['thread_id'])
-    >>> assert msg1['thread_id'] == msg2['thread_id']
+    >>> msg = flow.send('Thread start')
+    >>> thread = msg['thread']
+
+One can get thread ID of a message by two ways:
+
+.. code:: python
+
+    >>> thread_id = msg['thread']['id']
+    >>> thread_id = msg['thread_id']
+
+To list the all threads under the flow, invoke :meth:`threads` (plural).
+
+.. code:: python
+
+    >>> thread = flow.threads(limit=1)[0]
+
+To list all messages under a thread, invoke :meth:`list` under :meth:`thread` (singular) with given thread ID.
+
+.. code:: python
+
+    >>> msg = flow.thread(thread_id).list(limit=1)[0]
+
+To send a message onto the thread, invoke :meth:`send` under :meth:`thread` as well.
+
+.. code:: python
+
+    >>> flow.thread(thread_id).send('A message replied')
 
 Like emoji, invoking :meth:`edit` to re-thread a sent message doesn't work;
 Flowdock doesn't provide API for re-threading, either.
@@ -366,41 +395,46 @@ Check Presented Items
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After presenting an activity or discussion, Flowdock API will not return the resource ID of activity or discussion.
-A workaround is invoking :meth:`list` to find the latest activity or discussion event immediately.
+A workaround is checking the latest sent message.
 
 .. code:: python
 
-    >>> external_service.present(item_id, author=ray, title='commented', body='Comment again')
+    >>> external_service.present(item_id, author=ray, title='commented', body='No URI returned')
+
+Since there may be newer message has been sent during checking the latest sent message,
+it requires some restrictions to assure the last one is which you sent.
+
+With no restriction, simply invoke :meth:`list` to get the last one:
+
+.. code:: python
+
     >>> flow.list(limit=1).pop()['body']
-    'Comment again'
+    'No URI returned'
 
-If one considers there are meesages sent during presenting and checking, a solution is restricting the conditions.
-However, it requires to determine which events it presented -- activity or discussion.
+For example above, which present with a discussion, one can list only last discussion event,
+or list content/body contains the string (obviously it does not work with activity):
 
 .. code:: python
 
-    >>> external_service.present(item_id, author=ray, title='touched item')
-    >>> external_service.present(item_id, author=ray, title='commented', body='I just touch the item')
-    >>> flow.list(event='activity', limit=1).pop()['title']
-    'touched item'
-    >>> flow.list(event='discussion', limit=1).pop()['body']
-    'I just touch the item'
+    >>> flow.list(event='discussion').pop()['body']
+    'No URI returned'
+    >>> flow.list(search='URI').pop()['body']
+    'No URI returned'
 
-Final solution is the most stable way, but a little complicated.
-First, ``thread`` allow an optional key ``external_url`` which means the item URI actually.
-Set it before sending, then filter it from threads.
-The last event, no matter it is activity or discussion, should be the one you just send.
+The other workaround is more stable: presenting every thread with optional attribute ``external_url``
+which means the item URI actually. With the URI, one can indentify the thread.
+Since it is almost impossible multiple integration presenting the same item,
+one can assure the last activity/discussion is sent by themselves.
 
 .. code:: python
 
     >>> uri = f'https://external.service/item/{item_id}'
     >>> item['external_url'] = uri
     >>> external_service.present(item_id, author=ray, title='touched item', thread=item)
-    >>> #flow.thread()  # filter and ...
-
-An important thing is, ``thread_id`` maps to item ID one-to-one, but has not the same value with item ID.
-To retrieve item ID from thread, it is recommanded to set key ``external_url`` everytime,
-see the example in `Construct author and thread`_.
+    >>> thread = next(t for t in flow.threads() if t['external_url']==uri)
+    >>> act = flow.thread(thread['id']).list(event='activity').pop()
+    >>> act['title']
+    'touched item'
 
 
 Tag, Reply, and Delete a Presented Item

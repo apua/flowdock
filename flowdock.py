@@ -35,7 +35,7 @@ def get_uid(token, name) -> int:
     if not hasattr(get_uid, 'cache'):
         get_uid.cache = {}
         resp = requests.get(f'{API}/users', auth=(token, ''))
-        assert resp.status_code == 200, (resp.status_code, resp.json())
+        assert resp.status_code == 200, (resp.status_code, resp.content)
         get_uid.cache.update({u['nick']: u['id'] for u in resp.json()})
 
     return get_uid.cache[name]
@@ -126,16 +126,41 @@ def flow(token, org, flow):
 
     def list(**conditions):
         resp = requests.get(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=conditions)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
+        assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
+
+    def threads(**conditions):
+        resp = requests.get(f'{API}/flows/{org}/{flow}/threads', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
+
+    def thread(thread_id):
+        return threading(token, org, flow, thread_id)
 
     def events():
         with requests.get(f'{STREAM}/flows/{org}/{flow}', auth=auth,
                           headers={'Accept':'text/event-stream'}, stream=True) as resp:
-            assert resp.status_code == 200, (resp.status_code, resp.json())
+            assert resp.status_code == 200, (resp.status_code, resp.content)
             yield from get_events(resp)
             # TODO: parse the output of `get_events` for easy usage
             # TODO: support `EventSource` interface, hook callbacks, which is easier to use
+
+    return types.SimpleNamespace(**locals())
+
+
+def threading(token, org, flow, thread_id):
+    auth = (token, '')
+
+    def send(content, tags=None):
+        payload = {'event': 'message', 'content': content, 'tags': tags}
+        resp = requests.post(f'{API}/flows/{org}/{flow}/threads/{thread_id}/messages', auth=auth, json=payload)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()
+
+    def list(**conditions):
+        resp = requests.get(f'{API}/flows/{org}/{flow}/threads/{thread_id}/messages', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
 
     return types.SimpleNamespace(**locals())
 
