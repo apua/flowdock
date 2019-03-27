@@ -2,7 +2,7 @@
 Flowdock API wrapper
 ====================
 
-:Version: 1.0
+:Version: 0.2
 
 This API wrapper aim to **summarize** Flowdock API usage with **intuitive** implementation,
 in order to make development simpler, like creating chatbots, integrating services, and monitoring Flowdock flows.
