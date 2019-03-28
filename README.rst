@@ -14,6 +14,7 @@ there are notifications added in each sections.
 .. _`Flowdock API Document`: https://www.flowdock.com/api
 
 .. contents:: Contents
+    :depth: 2
 
 .. role:: func(literal)
 .. role:: meth(literal)
@@ -54,6 +55,8 @@ With the client, you can "join" the different channels with the same client.
     >>> private = client(uid=336968)
 
 The :code:`uid` above is "user ID", which can be found in the tail of a private channel URI.
+
+.. _`display name`:
 
 You can get UID by user's display name ("Display name" field in `Edit profile`_ page) as below.
 
@@ -261,26 +264,157 @@ Those methods are supported in private channels as well.
     AssertionError: (404, b'{"message":"not found"}')
 
 
-List Messages and Threads
+List Messages
 ----------------------------------------
 
-.. text search and tagged -- search x tags x tags_mode x skip x limit
-.. file and activitie -- event x sort x since_id x until_id x limit
-.. list threads
-.. list messages in given thread
-.. link and email
+.. _`List Messages -- Parameters`: https://www.flowdock.com/api/messages
 
-To list the all threads under the flow, invoke :meth:`threads` (plural).
+To list messages with some constraints, invoke :meth:`list` with parameters defined in `List Messages -- Parameters`_.
+
+A basic example is as below. Note that the result is always in *ascending* order.
+
+.. cleanup
+
+    >>> for m in flow.list(search='keyword'):
+    ...     flow.delete(m['id'])
+
+.. code:: python
+
+    >>> msg = flow.send('a keyword here')
+
+    >>> from time import sleep
+    >>> sleep(1)  # wait a while
+
+    >>> flow.list(search='keyword')[-1]['content']
+    'a keyword here'
+
+Although this Flowdock API is flexible to combine parameters, there are still rules hidden behind API.
+After trial and error, we summarize two pattern here.
+
+
+1. ``(search keywords) ∪ (match tags in mode) → skip N → limit N``
+````````````````````````````````````````````````````````````````````````````````
+
+For example below, it takes union of search results and tags matching results,
+skip the newest some, then limit the first some. [*]_
+
+.. cleanup
+
+    >>> for m in flow.list(search='keyword', tags=['A', 'B'], tag_mode='or'):
+    ...     flow.delete(m['id'])
+
+.. code:: python
+
+    >>> msg1 = flow.send('1. a keyword')
+    >>> msg2 = flow.send('2. keywords', tags=['A'])
+    >>> msg3 = flow.send('3. more keywords', tags=['A', 'B'])
+
+    >>> verify = lambda L: print(*[i['content'][0] for i in L])
+    >>> sleep(1)
+
+    >>> verify(flow.list(search='keyword'))
+    1
+    >>> verify(flow.list(tags=['A', 'B']))
+    3
+    >>> verify(flow.list(tags=['A', 'B'], tag_mode='or'))
+    2 3
+    >>> verify(flow.list(search='keyword', tags=['A', 'B'], tag_mode='or'))
+    1 2 3
+    >>> verify(flow.list(search='keyword', tags=['A', 'B'], tag_mode='or', skip=1))
+    1 2
+    >>> verify(flow.list(search='keyword', tags=['A', 'B'], tag_mode='or', limit=1))
+    3
+    >>> verify(flow.list(search='keyword', tags=['A', 'B'], tag_mode='or', skip=1, limit=1))
+    2
+
+.. [*] ``tags`` can be either comma seperated string (as document described) or a list of string in fact.
+
+
+2. ``(event type) ∩ (since ID - until ID) → sort [desc|asc] → limit N``
+````````````````````````````````````````````````````````````````````````````````
+
+For example below, it takes the results of matching event types greater than an ID and less than an ID,
+then limit the first some or last some. [*]_ [*]_
+
+.. code:: python
+
+    >>> file_path = './README.rst'
+    >>> msg1 = flow.upload(file_path)
+    >>> msg2 = flow.upload(file_path)
+    >>> msg3 = flow.upload(file_path)
+    >>> msg4 = flow.send('file_path')
+    >>> msg5 = flow.upload(file_path)
+
+    >>> M = {msg1['id']: 1, msg2['id']: 2, msg3['id']: 3, msg4['id']: 4, msg5['id']:5}
+    >>> verify = lambda L: print(*[M[m['id']] for m in L])
+    >>> sleep(1)
+
+    >>> verify(flow.list(since_id=msg1['id']))
+    2 3 4 5
+    >>> verify(flow.list(since_id=msg1['id'], until_id=msg5['id']))
+    2 3 4
+    >>> verify(flow.list(event='file', since_id=msg1['id']))
+    2 3 5
+    >>> verify(flow.list(event='file', since_id=msg1['id'], limit=1))
+    5
+    >>> verify(flow.list(event='file', since_id=msg1['id'], sort='asc', limit=1))
+    2
+
+.. [*] The parameter ``sort`` only works with parameter ``limit`` for changing behavior,
+       and will not change the order of result.
+
+.. [*] While delete an uploaded file, the response of "filtering last some" becomes incorrect,
+       and will be recovered later about 5 minutes.
+
+----
+
+To list uploaded files, both ways below work:
+
+.. code:: python
+
+    >>> msgs = flow.list(tags=':file')
+    >>> msgs = flow.list(event='file')
+
+To list messages contains link or Email, there is a way as below:
+
+.. code:: python
+
+    >>> msgs = flow.list(tags=':url')
+
+To list messages mentioned user with given `display name`_, for example, "@team":
+
+.. code:: python
+
+    >>> msgs = flow.list(tags='@team')
+
+
+List Threads
+----------------------------------------
+
+In contrast to listing messages, the result of listing threads is always in *descending* order.
+
+To list the threads under the flow, invoke :meth:`threads` (plural).
 
 .. code:: python
 
     >>> thread = flow.threads(limit=1)[0]
 
-To list all messages under a thread, invoke :meth:`list` under :meth:`thread` (singular) with given thread ID.
+API document list `parameters of listing flow threads`_, but not match the current Flowdock API.
+In addition to parameter ``limit``, there are only other parameters ``until`` and ``since`` are supported.
 
 .. code:: python
 
-    >>> msg = flow.thread(thread_id).list(limit=1)[0]
+    >>> threads = flow.threads(since='2019-01-01T00:00:00Z', until='2019-12-01T00:00:00Z')
+
+To list messages under a thread, invoke :meth:`list` under :meth:`thread` (singular) with given thread ID.
+
+.. code:: python
+
+    >>> msg = flow.thread(thread['id']).list(limit=1)[0]
+
+.. _`parameters of listing flow threads`: `List Flow Threads`_
+
+.. _`List Flow Threads`: https://www.flowdock.com/api/threads#/List
 
 
 Integration
@@ -570,7 +704,7 @@ What will be sent via `Flowdock streaming API`_ is undocumented and really inter
 For example, one can monitoring whether or not a user is typing.
 
 .. _`flowdock streaming api`: https://www.flowdock.com/api/streaming
-.. _`server-sent event`: https://www.w3.org/TR/2009/WD-eventsource-20090421/#event-stream-interpretation
+.. _`server-sent events`: https://www.w3.org/TR/2009/WD-eventsource-20090421/#event-stream-interpretation
 
 
 Not Implemented
