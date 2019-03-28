@@ -547,18 +547,30 @@ About ``actions``, refer to pages of Flowdock API documents for more information
 Event Monitor
 ==============================
 
+Based on `Server-Sent Events`_, `Flowdock streaming API`_ sends JSON content via ``data`` field of events,
+and this API wrapper loads JSON content into Python dict.
+
+To monitor a flow, invoke :meth:`events` returns an iterator.
+An example that monitoring a flow and sending a message concurrently as below:
+
 .. code:: python
 
     >>> import threading, time
     ...
     >>> def sleep_and_send_message():
     ...     time.sleep(1)
-    ...     flow.send('1 second latter')
+    ...     flow.send('1 second later')
     ...
     >>> threading.Thread(target=sleep_and_send_message).start()
     >>> e = next(flow.events())
     >>> e['content']
-    '1 second latter'
+    '1 second later'
+
+What will be sent via `Flowdock streaming API`_ is undocumented and really interesting.
+For example, one can monitoring whether or not a user is typing.
+
+.. _`flowdock streaming api`: https://www.flowdock.com/api/streaming
+.. _`server-sent event`: https://www.w3.org/TR/2009/WD-eventsource-20090421/#event-stream-interpretation
 
 
 Not Implemented
