@@ -1,237 +1,270 @@
-r"""
-Intuitive API wrapper
-=====================
-
-The wrapper keeps interaction with Python as simple as with Curl, but more intuitive.
-If one can write a simple Curl command, then they can write one line in Python as well;
-if one have to write a complex Curl command, then they can write clear code here.
-
-
-Use `python -m doctest flowdock.py` to test
-Use `python -m pydoc flowdock` to read document
-
-
-TODO:
-
-- organize `message` payload nicely
-- organize `event` payload nicely
-- reply specified thread
-- support integration present and post
-
-
-Usage
-=====
-
-Initialize and go into a private message or flow
-------------------------------------------------
-
->>> import flowdock
->>> from token import PERSONAL_API_TOKEN
-
->>> client = flowdock.client(PERSONAL_API_TOKEN, 'hpe')
->>> client.get_uid('Ray_')
-336968
->>> ray = client('Ray_')  # client(336968)
->>> cirrus = client(flow="cirrus")
-
->>> myflow = flowdock.client(token=PERSONAL_API_TOKEN, org='hpe', flow="apua-bot-1")
-
-Send and edit private message
------------------------------
-
->>> msg_id = ray.send('orig_content')
->>> ray.show(msg_id)['content']
-'orig_content'
->>> ray.edit(msg_id, 'edited_content')
->>> ray.show(msg_id)['content']
-'edited_content'
->>> ray.delete(msg_id)  # i.e. edit it as empty
->>> msg_id = ray.send('orig_content')
-
->>> msgs = ray.list(limit=30)
->>> msgs = ray.list(search="keyword1 keyword2 ...", skip=10)
->>> msgs = ray.list(tags=['a','b'],tag_mode='and')  # tag_mode := and | or
-
-Send and edit flow message
---------------------------
-
->>> msg_id = myflow.send('orig_content')
->>> myflow.show(msg_id)['content']
-'orig_content'
->>> myflow.edit(msg_id, 'edited_content')
->>> myflow.edit(msg_id, tags=['A______A'])
->>> myflow.show(msg_id)['content']
-'edited_content'
->>> myflow.delete(msg_id)
-
->>> msg_id = myflow.send('@Ray_, content with tags', tags=['haha'])
->>> assert 'haha' in myflow.show(msg_id)['tags']
->>> myflow.edit(msg_id, tags=['nono'])
->>> assert 'haha' in myflow.show(msg_id)['tags']
->>> myflow.edit(msg_id, tags=['yes'], override_tags=True)
->>> assert 'haha' not in myflow.show(msg_id)['tags']
->>> myflow.delete(msg_id)
-
->>> msgs = myflow.list(limit=30)
->>> msgs = myflow.list(search="keyword1 keyword2 ...", skip=10)
->>> msgs = myflow.list(tags=['a','b'],tag_mode='and')  # tag_mode := and | or
->>> msgs = myflow.list(events='message')  # events := message | discussion | activity | file | status
-
-Listen flow events
-------------------
-
-::
-    for event in myflow.events():
-        print(event.data)
-
->>> for i, event in enumerate(myflow.events()):
-...     if i > 2:
-...         break
-"""
-
-from collections import namedtuple
+import collections
 import json
-import re
-from typing import Union
+import types
 
 import requests
 
-
-Event = namedtuple('Event', ('data',))
-PrivateConversation = namedtuple('PrivateConversation', ('show', 'send', 'delete', 'edit', 'list'))
-Flow = namedtuple('Flow', ('show', 'send', 'delete', 'edit', 'list', 'events'))
+API = 'https://api.flowdock.com'
+STREAM = 'https://stream.flowdock.com'
 
 
-def _private_conversation(auth, base, uid):
+def get_uid(token, name) -> int:
     """
-    send: content -> IO msg_id
-    show: msg_id -> IO Message
-    delete: msg_id -> IO None
-    edit: msg_id -> content -> IO None
-    list: Options -> IO [Message]
+    Get UID by display name.
+
+    The dumped user data is formed as below.
+    Note that ``nick`` (i.e. "Display name" field in "Edit profile" page) is unique,
+    but ``name`` (i.e "Name" field in "Edit profile" page) is not.
+
+    Therefore, it is nothing different between searching with organization/flow or not.
+
+    This function also cache user ``nick - id`` mapping.
+    It is reasonable because adding users is infrequent and fetching data is expensive.
+
+    .. code:: json
+
+        {
+            "id": 336968,
+            "nick": "Ray_",
+            "email": "ray.zhu@hpe.com",
+            "avatar": "http://somewhere.public/ray.png",
+            "name": "Ray Zhu",
+            "website": null
+        }
     """
-    def send(content):
-        resp = requests.post(f'{base}/private/{uid}/messages', auth=auth, json={'event':'message','content':content})
-        assert resp.status_code == 201, (resp.status_code, resp.json())
-        msg_id = resp.json()['id']
-        return msg_id
+    if not hasattr(get_uid, 'cache'):
+        get_uid.cache = {}
+        resp = requests.get(f'{API}/users', auth=(token, ''))
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        get_uid.cache.update({u['nick']: u['id'] for u in resp.json()})
 
-    def show(msg_id):
-        resp = requests.get(f'{base}/private/{uid}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
-        msg = resp.json()
-        return msg
-
-    def delete(msg_id):
-        resp = requests.delete(f'{base}/private/{uid}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
-
-    def edit(msg_id, content):
-        resp = requests.put(f'{base}/private/{uid}/messages/{msg_id}', auth=auth, json={'content':content})
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
-
-    def list(**conditions):
-        resp = requests.get(f'{base}/private/{uid}/messages', auth=auth, json=conditions)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
-        msgs = resp.json()
-        return msgs
-
-    return PrivateConversation(*map(locals().__getitem__, PrivateConversation._fields))
+    return get_uid.cache[name]
 
 
-def _flow(auth, base, org, flow):
+def get_events(conn):
     """
-    send: content -> IO msg_id
-    show: msg_id -> IO Message
-    delete: msg_id -> IO None
-    edit: msg_id -> content -> IO None
-    list: Options -> IO [Message]
+     Interprete and yield ``Event`` object according to `Server-sent events`__ .
 
-    present: flow_token -> ItemInfo -> Item
-
-    events: IO [Event]
+    __ https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
     """
-    def send(content, tags=None):
-        resp = requests.post(f'{base}/flows/{org}/{flow}/messages', auth=auth, json={'event':'message','content':content,'tags':tags})
-        assert resp.status_code == 201, (resp.status_code, resp.json())
-        msg_id = resp.json()['id']
-        return msg_id
+    buffer = types.SimpleNamespace(event_type='', data='', last_event_id='')
+    Event = collections.namedtuple('Event', 'type data last_event_id')
 
-    def show(msg_id):
-        resp = requests.get(f'{base}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
-        msg = resp.json()
-        return msg
+    def process_field(field_name, value: str):
+        if field_name == 'event':
+            buffer.event_type = value
+        elif field_name == 'data':
+            buffer.data += value
+        elif field_name == 'id':
+            if '\x00' not in value:
+                buffer.last_event_id = value
+        elif field_name == 'retry':
+            raise NotImplementedError
+        else:
+            pass
 
-    def delete(msg_id):
-        resp = requests.delete(f'{base}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
-
-    def edit(msg_id, content=None, tags=None, override_tags=False):
-        """
-        - at least edit `content` or `tags`
-        - seems like hash tags only allow [0-9a-z_]
-        - not allow modify starts with ":" tags
-        - not allow override existing tags unless `overrride_tags` is True
-        - by default, `override_tags` is False, and new tags will be appended to origin tags
-        """
-        if content is None and tags is None:
-            raise TypeError('at least edit `content` or `tags`')
-
-        payload = {}
-        if content is not None:
-            payload['content'] = content
-        if tags is not None:
-            _tags = show(msg_id)['tags']
-            if override_tags:
-                _tags = [t for t in _tags if re.match(r'\W', t)]
-            payload['tags'] = _tags + tags
-
-        resp = requests.put(f'{base}/flows/{org}/{flow}/messages/{msg_id}', auth=auth, json=payload)
-        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.json())
-
-    def list(**conditions):
-        resp = requests.get(f'{base}/flows/{org}/{flow}/messages', auth=auth, json=conditions)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
-        msgs = resp.json()
-        return msgs
-
-    def events():
-        stream_base = 'https://stream.flowdock.com'
-        with requests.get(f'{stream_base}/flows/{org}/{flow}', auth=auth,
-                          headers={'Accept':'text/event-stream'}, stream=True) as resp:
-            assert resp.status_code == 200, (resp.status_code, resp.json())
-            for line in resp.iter_lines():
-                if line.startswith(b'data:'):
-                    data = json.loads(line.decode().strip('data:').strip())
-                    yield Event(data)
-
-    return Flow(*map(locals().__getitem__, Flow._fields))
+    for line in map(bytes.decode, conn.iter_lines()):
+        if not line:
+            if buffer.data:
+                yield Event(buffer.event_type, buffer.data, buffer.last_event_id)
+            buffer.event_type = buffer.data = ''
+        elif line.startswith(':'):
+            pass
+        elif ':' in line:
+            field_name, tail = line.split(':', 1)
+            value = tail.lstrip(' ')
+            process_field(field_name, value)
+        else:
+            field_name = line
+            process_field(field_name, '')
 
 
-def client(token, org:str, user:Union[str, int]=None, flow:str=None):
-    """
-    client: token -> org -> user -> PrivateConversation
-    client: token -> org -> flow -> Flow
-    """
-    base = 'https://api.flowdock.com'
+def flow(token, org, flow):
     auth = (token, '')
 
-    def get_uid(user_name):
-        resp = requests.get(f'{base}/organizations/{org}/users', auth=auth)
-        assert resp.status_code == 200, (resp.status_code, resp.json())
-        filtered = [u for u in resp.json() if u['nick'] == user_name]
-        assert len(filtered) == 1
-        return filtered[0]['id']
+    def send(content, tags=None, thread_id=None):
+        payload = {'event': 'message', 'content': content, 'tags': tags, 'thread_id': thread_id}
+        resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=payload)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()
 
-    if user is None and flow is None:
-        c = lambda *a, **kw: client(token, org, *a, **kw)
-        c.get_uid = get_uid
-        return c
-    elif user:
-        uid = get_uid(user) if isinstance(user, str) else user
-        return _private_conversation(auth, base, uid)
-    elif flow:
-        return _flow(auth, base, org, flow)
+    def show(msg_id):
+        resp = requests.get(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
+
+    def edit(msg_id, content=None, tags=None):
+        payload = {}
+
+        if content is not None:
+            payload['content'] = content
+
+        if tags is not None:
+            payload['tags'] = tags
+
+        resp = requests.put(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth, json=payload)
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.content)
+
+    def delete(msg_id):
+        resp = requests.delete(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
+                (resp.status_code, resp.content)
+
+    def upload(file_path):
+        files = {'content': open(file_path,'rb')}
+        data = {'event': 'file'}
+        resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, files=files, data=data)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()
+
+    def download(uri_path):
+        resp = requests.get(f'{API}/{uri_path}', auth=auth)
+        assert [r.status_code for r in resp.history] == [302], (uri_path, resp.history)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.content
+
+    def list(**conditions):
+        resp = requests.get(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
+
+    def threads(**conditions):
+        resp = requests.get(f'{API}/flows/{org}/{flow}/threads', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
+
+    def thread(thread_id):
+        return threading(token, org, flow, thread_id)
+
+    def events():
+        with requests.get(f'{STREAM}/flows/{org}/{flow}', auth=auth,
+                          headers={'Accept':'text/event-stream'}, stream=True) as resp:
+            assert resp.status_code == 200, (resp.status_code, resp.content)
+            yield from (json.loads(e.data) for e in get_events(resp))
+
+    return types.SimpleNamespace(**locals())
+
+
+def threading(token, org, flow, thread_id):
+    auth = (token, '')
+
+    def send(content, tags=None):
+        payload = {'event': 'message', 'content': content, 'tags': tags}
+        resp = requests.post(f'{API}/flows/{org}/{flow}/threads/{thread_id}/messages', auth=auth, json=payload)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()
+
+    def list(**conditions):
+        resp = requests.get(f'{API}/flows/{org}/{flow}/threads/{thread_id}/messages', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
+
+    return types.SimpleNamespace(**locals())
+
+
+def private(token, uid):
+    auth = (token, '')
+
+    def send(content, tags=None):
+        payload = {'event': 'message', 'content': content, 'tags': tags}
+        resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, json=payload)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()
+
+    def show(msg_id):
+        resp = requests.get(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
+
+    def edit(msg_id, content=None, tags=None):
+        payload = {}
+
+        if content is not None:
+            payload['content'] = content
+
+        if tags is not None:
+            payload['tags'] = tags
+
+        resp = requests.put(f'{API}/private/{uid}/messages/{msg_id}', auth=auth, json=payload)
+        assert resp.status_code == 200 and not resp.json(), (resp.status_code, resp.content)
+
+    def delete(msg_id):
+        resp = requests.delete(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
+                (resp.status_code, resp.content)
+
+    def upload(file_path):
+        files = {'content': open(file_path,'rb')}
+        data = {'event': 'file'}
+        resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, files=files, data=data)
+        assert resp.status_code == 201, (resp.status_code, resp.content)
+        return resp.json()
+
+    def download(uri_path):
+        resp = requests.get(f'{API}/{uri_path}', auth=auth)
+        assert [r.status_code for r in resp.history] == [302], (uri_path, resp.history)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.content
+
+    def list(**conditions):
+        resp = requests.get(f'{API}/private/{uid}/messages', auth=auth, json=conditions)
+        assert resp.status_code == 200, (resp.status_code, resp.content)
+        return resp.json()
+
+    return types.SimpleNamespace(**locals())
+
+
+def integration(flow_token):
+    def present(id, author, title, body=None, thread=None):
+        payload = {'flow_token': flow_token, 'external_thread_id': id, 'author': author, 'title': title}
+
+        if body is None:
+            payload['event'] = 'activity'
+        else:
+            payload['event'] = 'discussion'
+            payload['body'] = body
+
+        if thread is not None:
+            payload['thread'] = thread
+
+        resp = requests.post(f'{API}/messages', json=payload)
+        assert resp.status_code == 202 and not resp.json(), (resp.status_code, resp.content)
+
+    return types.SimpleNamespace(**locals())
+
+
+class constructors:
+    def __new__(*a, **kw):
+        raise TypeError('it is not callable')
+
+    def author(name, avatar=None):
+        return locals()
+
+    def thread(title, body=None, fields=None, status=None, external_url=None, actions=None):
+        return locals()
+
+    def field(label, value):
+        return locals()
+
+    def status(color, value):
+        if color not in __class__.status.colors:
+            raise TypeError(f'valid colors: {", ".join(__class__.status.colors)}')
+        return {'color': color, 'value': value}
+    status.colors = ('black', 'blue', 'cyan', 'green', 'grey', 'lime', 'orange', 'purple', 'red', 'yellow')
+
+
+def connect(**kw):
+    if kw.keys() == {'token'}:
+        partial = lambda **kwargs: connect(**kw, **kwargs)
+        partial.get_uid = lambda **kwargs: get_uid(**kw, **kwargs)
+        return partial
+    elif kw.keys() == {'token', 'org', 'flow'}:
+        return flow(**kw)
+    elif kw.keys() == {'token', 'uid'}:
+        return private(**kw)
+    elif kw.keys() == {'token', 'name'}:
+        return private(token=kw['token'], uid=get_uid(**kw))
+    elif kw.keys() == {'flow_token'}:
+        return integration(**kw)
     else:
         raise TypeError

@@ -1,5 +1,0 @@
-# https://www.flowdock.com/account/tokens
-PERSONAL_API_TOKEN = "********************************"
-
-# https://www.flowdock.com/settings/hpe/flows/apua-bot-1/integrations -> "Add new source"
-FLOW_TOKEN = "********************************"
