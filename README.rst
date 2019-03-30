@@ -2,10 +2,21 @@
 Flowdock API wrapper
 ====================
 
-:Version: 0.2
+|PyPI Release Version| |Supported Python Distro|
+
+.. |PyPI Release Version| image:: https://img.shields.io/pypi/v/flowdock-api-wrapper.svg?color=blue&label=PyPI&logo=python&logoColor=white
+.. |Supported Python Distro| image:: https://img.shields.io/pypi/pyversions/flowdock-api-wrapper.svg?color=blue&label=Supported%20Python%20Distro
 
 This API wrapper aim to **summarize** Flowdock API usage with **intuitive** implementation,
 in order to make development simpler, like creating chatbots, integrating services, and monitoring Flowdock flows.
+
+To install the wrapper, use ``pip`` or ``pipenv``:
+
+.. code:: sh
+
+    $ pip install flowdock-api-wrapper
+
+To contribute the wrapper, refer to development guide in ``flowdock.py`` comment.
 
 Following content focus on introduing the usage of this wrapper;
 besides, since part of `Flowdock API Document`_ doesn't match current behavior,
@@ -663,7 +674,7 @@ Supported status colors are as below; constructor ``status`` could validate the 
     >>> item['status'] = new.status(color='not supported color', value='...')
     Traceback (most recent call last):
     ...
-    TypeError: valid colors: black, blue, cyan, green, grey, lime, orange, purple, red, yellow
+    TypeError: got invalid color; supported colors are: ('black', 'blue', 'cyan', 'green', 'grey', 'lime', 'orange', 'purple', 'red', 'yellow')
 
 About ``actions``, refer to pages of Flowdock API documents for more information:
 
