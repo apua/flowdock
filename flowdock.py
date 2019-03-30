@@ -1,3 +1,53 @@
+"""
+It is a simple script wrapping Flowdock API.
+Please refer to the online document for usage.
+
+:url: https://github.com/apua/flowdock
+"""
+
+#   Design
+#   ===============
+#
+#   Since it is just a wrapper, the wrapped API names and arguments should follow Flowdock API document.
+#
+#   To make it reusable unlike invoking Curl,
+#   things such as API tokens should be cached for further operations that user care about,
+#   like send or edit a message.
+#
+#   Wrapped API response should keep original response not to be modified,
+#   so that user can learn what Flowdock exactly does by trial and error.
+#
+#   To reduce unexpected response due to user typo, wrapped API should validate supported parameters;
+#   in the case of integration, the parameters in the nest JSON payload of a HTTP request should be validate, too.
+#
+#   Implementation
+#   ===============
+#
+#   To make it simple, consider the form::
+#
+#       cache(token and URI arguments).operate(parameters and values)
+#
+#   Since it only requires namespace, implement callable with ``SimpleNamespace``
+#   and nested function to share cached values, and implement non-callable with Python syntax ``class``.
+#
+#   To validate supported parameters, restrict the parameter names following origin API document,
+#   and verify the parameter names for ``TypeError``.
+#
+#   For easy to debug, use f-string to represent URI patterns,
+#   and use assertion to represent origin API response including status code and response payload.
+#
+#   To implement Server-Sent Events, simply follow W3C document instruction.
+#
+#   Test
+#   ===============
+#
+#   All test cases are listed in README.rst and in doctest format.
+#   Invoke built-in ``doctest`` module to execute test cases.
+#
+#   Most of all test cases are built on Flowdock services, require real API token and channels,
+#   thus one might have to adjust test data for test environment.
+#   At least, they can be executed repeatedly.
+
 import collections
 import json
 import types

@@ -7,6 +7,15 @@ Flowdock API wrapper
 This API wrapper aim to **summarize** Flowdock API usage with **intuitive** implementation,
 in order to make development simpler, like creating chatbots, integrating services, and monitoring Flowdock flows.
 
+To install the wrapper, use ``pip`` or ``pipenv``:
+
+.. code:: sh
+
+    $ pip install flowdock-api-wrapper
+
+The design, implementation, and test, are described in ``flowdock.py`` docstring,
+and the publish process is described in ``setup.py`` docstring.
+
 Following content focus on introduing the usage of this wrapper;
 besides, since part of `Flowdock API Document`_ doesn't match current behavior,
 there are notifications added in each sections.
