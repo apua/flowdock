@@ -2,7 +2,10 @@
 Flowdock API wrapper
 ====================
 
-:Version: 0.2
+|PyPI Release Version| |Supported Python Distro|
+
+.. |PyPI Release Version| image:: https://img.shields.io/pypi/v/flowdock-api-wrapper.svg?color=blue&label=PyPI&logo=python&logoColor=white
+.. |Supported Python Distro| image:: https://img.shields.io/pypi/pyversions/flowdock-api-wrapper.svg?color=blue&label=Supported%20Python%20Distro
 
 This API wrapper aim to **summarize** Flowdock API usage with **intuitive** implementation,
 in order to make development simpler, like creating chatbots, integrating services, and monitoring Flowdock flows.
@@ -13,8 +16,7 @@ To install the wrapper, use ``pip`` or ``pipenv``:
 
     $ pip install flowdock-api-wrapper
 
-The design, implementation, and test, are described in ``flowdock.py`` docstring,
-and the publish process is described in ``setup.py`` docstring.
+To contribute the wrapper, refer to development guide in ``flowdock.py`` comment.
 
 Following content focus on introduing the usage of this wrapper;
 besides, since part of `Flowdock API Document`_ doesn't match current behavior,

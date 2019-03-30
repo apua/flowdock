@@ -63,27 +63,30 @@ Please refer to the online document for usage.
 #   -   Version number
 #   -   Design, implementation, testing, and publishing
 #
-#   Releases on Github comes from ``git tag`` on master branch.
-#
 #   Releases on PyPI are referred to PyPA tutorial `Packaging Python Projects`_ and leveraging ``twine``.
+#   Below shows how to test publishing onto TestPyPI:
 #
 #   .. _`packaging python projects`: https://packaging.python.org/tutorials/packaging-projects/
 #
-#   Before uploading to PyPI ...
+#   .. code:: sh
 #
-#   1. Review hard-coded information in ``setup.py``
+#       $ ls setup.py
+#       setup.py
+#       $ rm -r dist ; python setup.py sdist bdist_wheel
+#       $ twine check dist/*.whl
+#       $ twine upload --user=${user} --password=${password} --repository-url https://test.pypi.org/legacy/ 'dist/*'
 #
-#   2. Test publishing onto TestPyPI:
+#   .. WARNING:: MUST avoid version collision, which is no way to solve even deleting it on PyPI/TestPyPI.
 #
-#      .. code:: sh
+#   Release process:
 #
-#          $ ls setup.py
-#          setup.py
-#          $ rm -r dist ; python setup.py sdist bdist_wheel
-#          $ twine check dist/*.whl
-#          $ twine upload --user=${user} --password=${password} --repository-url https://test.pypi.org/legacy/ 'dist/*'
-#
-#      .. WARNING:: MUST avoid version collision, which is no way to solve even deleting it on PyPI/TestPyPI.
+#   1.  Merge development branch to master
+#   #.  Review hard-coded information in ``setup.py``
+#   #.  Bump version number in ``flowdock.py``
+#   #.  Upload to TestPyPI for test
+#   #.  Commit with template "Bumped version to v0.0"
+#   #.  Upload to PyPI
+#   #.  Tag commit and push to Github
 
 import collections
 import json
