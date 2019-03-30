@@ -174,11 +174,21 @@ def flow(token, org, flow):
         return resp.content
 
     def list(**conditions):
+        supported_parameters = ('search', 'tags', 'tag_mode', 'skip', 'limit', 'event', 'since_id', 'until_id', 'sort')
+        for para in conditions.keys():
+            if para not in supported_parameters:
+                raise TypeError(f'got unsupported parameter \'{para}\'; '
+                                f'supported parameters are: {supported_parameters}')
         resp = requests.get(f'{API}/flows/{org}/{flow}/messages', auth=auth, json=conditions)
         assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
 
     def threads(**conditions):
+        supported_parameters = ('limit', 'since', 'until', 'application', 'empty')
+        for para in conditions.keys():
+            if para not in supported_parameters:
+                raise TypeError(f'got unsupported parameter \'{para}\'; '
+                                f'supported parameters are: {supported_parameters}')
         resp = requests.get(f'{API}/flows/{org}/{flow}/threads', auth=auth, json=conditions)
         assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
@@ -257,6 +267,11 @@ def private(token, uid):
         return resp.content
 
     def list(**conditions):
+        supported_parameters = ('search', 'tags', 'tag_mode', 'skip', 'limit', 'event', 'since_id', 'until_id', 'sort')
+        for para in conditions.keys():
+            if para not in supported_parameters:
+                raise TypeError(f'got unsupported parameter \'{para}\'; '
+                                f'supported parameters are: {supported_parameters}')
         resp = requests.get(f'{API}/private/{uid}/messages', auth=auth, json=conditions)
         assert resp.status_code == 200, (resp.status_code, resp.content)
         return resp.json()
@@ -297,10 +312,10 @@ class constructors:
         return locals()
 
     def status(color, value):
-        if color not in __class__.status.colors:
-            raise TypeError(f'valid colors: {", ".join(__class__.status.colors)}')
+        supported_colors = ('black', 'blue', 'cyan', 'green', 'grey', 'lime', 'orange', 'purple', 'red', 'yellow')
+        if color not in supported_colors:
+            raise TypeError(f'got invalid color; supported colors are: {supported_colors}')
         return {'color': color, 'value': value}
-    status.colors = ('black', 'blue', 'cyan', 'green', 'grey', 'lime', 'orange', 'purple', 'red', 'yellow')
 
 
 def connect(**kw):
@@ -317,4 +332,4 @@ def connect(**kw):
     elif kw.keys() == {'flow_token'}:
         return integration(**kw)
     else:
-        raise TypeError
+        raise TypeError('got at least one unexpected keyword argument; refer to document for the usage')
