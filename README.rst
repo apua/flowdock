@@ -672,7 +672,7 @@ Supported status colors are as below; constructor ``status`` could validate the 
     >>> item['status'] = new.status(color='not supported color', value='...')
     Traceback (most recent call last):
     ...
-    TypeError: valid colors: black, blue, cyan, green, grey, lime, orange, purple, red, yellow
+    TypeError: got invalid color; supported colors are: ('black', 'blue', 'cyan', 'green', 'grey', 'lime', 'orange', 'purple', 'red', 'yellow')
 
 About ``actions``, refer to pages of Flowdock API documents for more information:
 
