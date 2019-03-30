@@ -1,10 +1,12 @@
 """
 It is a simple script wrapping Flowdock API.
 Please refer to the online document for usage.
-
-:url: https://github.com/apua/flowdock
 """
 
+#   ====================
+#   Development Guide
+#   ====================
+#
 #   Design
 #   ===============
 #
@@ -38,7 +40,7 @@ Please refer to the online document for usage.
 #
 #   To implement Server-Sent Events, simply follow W3C document instruction.
 #
-#   Test
+#   Testing
 #   ===============
 #
 #   All test cases are listed in README.rst and in doctest format.
@@ -47,12 +49,50 @@ Please refer to the online document for usage.
 #   Most of all test cases are built on Flowdock services, require real API token and channels,
 #   thus one might have to adjust test data for test environment.
 #   At least, they can be executed repeatedly.
+#
+#   Publishing
+#   ===============
+#
+#   ``README.rst`` treated as both user guide and landing page contains:
+#
+#   -   Releasd version, license, and so on.
+#   -   Purpose, features, and usage.
+#
+#   ``flowdock.py`` contains source code, real package status, and development guide in comment:
+#
+#   -   Version number
+#   -   Design, implementation, testing, and publishing
+#
+#   Releases on Github comes from ``git tag`` on master branch.
+#
+#   Releases on PyPI are referred to PyPA tutorial `Packaging Python Projects`_ and leveraging ``twine``.
+#
+#   .. _`packaging python projects`: https://packaging.python.org/tutorials/packaging-projects/
+#
+#   Before uploading to PyPI ...
+#
+#   1. Review hard-coded information in ``setup.py``
+#
+#   2. Test publishing onto TestPyPI:
+#
+#      .. code:: sh
+#
+#          $ ls setup.py
+#          setup.py
+#          $ rm -r dist ; python setup.py sdist bdist_wheel
+#          $ twine check dist/*.whl
+#          $ twine upload --user=${user} --password=${password} --repository-url https://test.pypi.org/legacy/ 'dist/*'
+#
+#      .. WARNING:: MUST avoid version collision, which is no way to solve even deleting it on PyPI/TestPyPI.
 
 import collections
 import json
 import types
 
 import requests
+
+
+__version__ = 0.2
 
 API = 'https://api.flowdock.com'
 STREAM = 'https://stream.flowdock.com'
