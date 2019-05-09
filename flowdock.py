@@ -136,7 +136,7 @@ def get_uid(token, name) -> int:
 
 def get_events(conn):
     """
-     Interprete and yield ``Event`` object according to `Server-sent events`__ .
+    Interprete and yield ``Event`` object according to `Server-sent events`__ .
 
     __ https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
     """
@@ -362,6 +362,27 @@ class constructors:
 
 
 def connect(**kw):
+    """
+    Connect Flowdock to initialize a client to join a flow or private channel.
+
+    It supports multiple usage for different cases.
+
+    Switch among flow/private channels::
+
+        client = flowdock.connect(token=PERSONAL_API_TOKEN)
+        flow = client(org=ORG_NAME, flow=FLOW_NAME)
+        private = client(uid=USER_ID)
+
+    Join a channel in one line::
+
+        flow = flowdock.connect(token=PERSONAL_API_TOKEN, org=ORG_NAME, flow=FLOW_NAME)
+        private = flowdock.connect(token=PERSONAL_API_TOKEN, uid=USER_ID)
+        private = flowdock.connect(token=PERSONAL_API_TOKEN, name=USER_NAME)
+
+    Connect by integrate external services::
+
+        external_service = flowdock.connect(flow_token=FLOW_TOKEN)
+    """
     if kw.keys() == {'token'}:
         partial = lambda **kwargs: connect(**kw, **kwargs)
         partial.get_uid = lambda **kwargs: get_uid(**kw, **kwargs)
