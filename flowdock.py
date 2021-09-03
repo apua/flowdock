@@ -151,6 +151,8 @@ def get_events(conn):
         elif field_name == 'id':
             if '\x00' not in value:
                 buffer.last_event_id = value
+            else:
+                pass
         elif field_name == 'retry':
             raise NotImplementedError
         else:
