@@ -432,7 +432,7 @@ To list messages under a thread, invoke :meth:`list` under :meth:`thread` (singu
 Integration
 ==============================
 
-.. image:: screenshots/Flowdock%20Inbox.png
+.. image:: screenshots/flowdock%20inbox.png
     :alt: Flowdock Inbox overview
 
 Flowdock can integrate external services, e.g. Trello, onto Flowdock Inbox,
