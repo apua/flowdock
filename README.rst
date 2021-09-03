@@ -22,12 +22,11 @@ To contribute the wrapper, refer to development guide in ``flowdock.py`` comment
 
 Following content focus on introduing the usage of this wrapper;
 besides, since part of `Flowdock API Document`_ doesn't match current behavior,
-there are notifications added in each sections.
+notes are added in each sections.
 
 .. _`Flowdock API Document`: https://www.flowdock.com/api
 
 .. contents:: Contents
-    :depth: 2
 
 .. role:: func(literal)
 .. role:: meth(literal)
