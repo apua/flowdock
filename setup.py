@@ -1,10 +1,16 @@
 import setuptools
 
 
+def get_version(module_path):
+    match = next(line for line in open(module_path) if line.startswith('__version__'))
+    _, version, _ = match.replace('"',"'").split("'")
+    return version
+
+
 setuptools.setup(
     name='flowdock-api-wrapper',
     url='https://github.com/apua/flowdock',
-    version=__import__('flowdock').__version__,
+    version=get_version('flowdock.py'),
     description='Flowdock API Wrapper',
     long_description=open('README.rst').read(),
     long_description_content_type='text/x-rst',
