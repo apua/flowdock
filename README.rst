@@ -2,12 +2,16 @@
 Flowdock API wrapper
 ====================
 
-|PyPI Release Version| |Supported Python Distro|
+|PyPI Release Version| |License| |Supported Python Distro|
 
-.. |PyPI Release Version| image::
-    https://img.shields.io/pypi/v/flowdock-api-wrapper.svg?color=blue&label=PyPI&logo=python&logoColor=white
-.. |Supported Python Distro| image::
-    https://img.shields.io/pypi/pyversions/flowdock-api-wrapper.svg?color=blue&label=Supported%20Python%20Distro
+.. |PyPI Release Version| image:: https://img.shields.io/pypi/v/flowdock-api-wrapper?color=blue&label=PyPI&logo=python&logoColor=white
+    :target: https://pypi.org/project/flowdock-api-wrapper/
+.. |License| image:: https://img.shields.io/github/license/apua/flowdock?color=blue&label=License
+    :target: LICENSE
+.. |Supported Python Distro| image:: https://img.shields.io/pypi/pyversions/flowdock-api-wrapper?color=blue&label=Python
+.. |GitHub Actions| image:: https://github.com/apua/flowdock/workflows/{workflow}/badge
+    :target: https://github.com/apua/flowdock/actions
+
 
 This API wrapper aim to **summarize** Flowdock API usage with **intuitive** implementation,
 in order to make development simpler, like creating chatbots, integrating services, and monitoring Flowdock flows.
@@ -27,6 +31,7 @@ notes are added in each sections.
 .. _`Flowdock API Document`: https://www.flowdock.com/api
 
 .. contents:: Contents
+    :depth: 2
 
 .. role:: func(literal)
 .. role:: meth(literal)
