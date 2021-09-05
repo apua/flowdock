@@ -202,11 +202,11 @@ def flow(token, org, flow):
 
     def delete(msg_id):
         resp = requests.delete(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
-        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
-                (resp.status_code, resp.content)
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content), \
+            (resp.status_code, resp.content)
 
     def upload(file_path):
-        files = {'content': open(file_path,'rb')}
+        files = {'content': open(file_path, 'rb')}
         data = {'event': 'file'}
         resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, files=files, data=data)
         assert resp.status_code == 201, (resp.status_code, resp.content)
@@ -243,7 +243,7 @@ def flow(token, org, flow):
 
     def events():
         with requests.get(f'{STREAM}/flows/{org}/{flow}', auth=auth,
-                          headers={'Accept':'text/event-stream'}, stream=True) as resp:
+                          headers={'Accept': 'text/event-stream'}, stream=True) as resp:
             assert resp.status_code == 200, (resp.status_code, resp.content)
             yield from (json.loads(e.data) for e in get_events(resp))
 
@@ -295,11 +295,11 @@ def private(token, uid):
 
     def delete(msg_id):
         resp = requests.delete(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
-        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
-                (resp.status_code, resp.content)
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content), \
+            (resp.status_code, resp.content)
 
     def upload(file_path):
-        files = {'content': open(file_path,'rb')}
+        files = {'content': open(file_path, 'rb')}
         data = {'event': 'file'}
         resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, files=files, data=data)
         assert resp.status_code == 201, (resp.status_code, resp.content)
