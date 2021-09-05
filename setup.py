@@ -15,7 +15,7 @@ setuptools.setup(
     long_description=open('README.rst').read(),
     long_description_content_type='text/x-rst',
     keywords='flowdock',
-    install_requires=['requests>=2.21'],
+    install_requires=['requests'],
     py_modules=['flowdock'],
     python_requires='>=3.6',
     classifiers=[
