@@ -437,8 +437,8 @@ To list messages under a thread, invoke :meth:`list` under :meth:`thread` (singu
 Integration
 ==============================
 
-.. image:: screenshots/flowdock%20inbox.png
-    :alt: Flowdock Inbox overview
+.. image:: https://github.com/apua/flowdock/raw/main/screenshots/flowdock%20inbox.png
+    :alt: "Flowdock Inbox" overview
 
 Flowdock can integrate external services, e.g. Trello, onto Flowdock Inbox,
 so that you can track item status, user activities, and discussion on the item.
@@ -489,8 +489,8 @@ The expected result is as below.
 Note that "ExternalService" shown in the figure is the integration name rather than the external service name,
 thus it is recommended to set integration name the same as external service name.
 
-.. image:: screenshots/basic%20expected%20result.png
-    :alt: basic expected result shows the presented item name, a user created item, and discussion
+.. image:: https://github.com/apua/flowdock/raw/main/screenshots/basic%20expected%20result.png
+    :alt: A basic expected result shows the presented item name, a user created item, and discussion
 
 Activities is just like the item history,
 therefore, each updating item operation should be presented with an activity.
