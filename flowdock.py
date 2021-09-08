@@ -95,8 +95,6 @@ import types
 import requests
 
 
-__version__ = '1.0'
-
 API = 'https://api.flowdock.com'
 STREAM = 'https://stream.flowdock.com'
 
