@@ -1,11 +1,59 @@
+# Ref: https://flit.readthedocs.io/en/latest/pyproject_toml.html
+
 [build-system]
 requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "flowdock"
-authors = [{name = "Apua", email = "apua.a.aa@gmail.com"}]
-readme = "README.rst"
-classifiers = ["License :: OSI Approved :: MIT License"]
+name = "flowdock-api-wrapper"
 version = "1.0.15"
-dynamic = ["description"]
+description = "Flowdock API Wrapper"
+dependencies = ["requires"]
+keywords = ["flowdock"]
+requires-python = ">=3.6"
+
+# `flit` takes it as the long description and analyse the content type.
+# It is a convention.
+readme = "README.rst"
+
+# `flit` would find it.
+# It is a convention.
+#license = {file = "LICENSE"}
+
+# I don't want to keep it. I'd like to keep it lean.
+# The information on PyPI and GitHub is sufficient.
+#authors = [{name = "Apua", email = "apua.a.aa@gmail.com"}]
+#maintainers = [{name = "Apua", email = "apua.a.aa@gmail.com"}]
+
+classifiers = [
+    #"Development Status :: 1 - Planning",
+    #"Development Status :: 2 - Pre-Alpha",
+    #"Development Status :: 3 - Alpha",
+    #"Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
+    #"Development Status :: 6 - Mature",
+    #"Development Status :: 7 - Inactive",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Communications :: Chat",
+    "Topic :: Communications :: Conferencing",
+    "License :: OSI Approved :: MIT License",
+]
+
+[tool.flit.module]
+# `flit` considers 1 package 1 module.
+# It is a convention, although I remember there is exceptions.
+# Actually, keep module name as package name is convention as well,
+# which helps name collision.
+name = "flowdock"
+
+[project.urls]
+# `flit` dropped "url" or "home-page" key
+# It is setuptools legacy.
+Source = "https://github.com/apua/flowdock"
