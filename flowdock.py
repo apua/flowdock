@@ -136,7 +136,7 @@ def get_uid(token, name) -> int:
 
 def get_events(conn):
     """
-     Interprete and yield ``Event`` object according to `Server-sent events`__ .
+    Interprete and yield ``Event`` object according to `Server-sent events`__ .
 
     __ https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
     """
@@ -151,6 +151,8 @@ def get_events(conn):
         elif field_name == 'id':
             if '\x00' not in value:
                 buffer.last_event_id = value
+            else:
+                pass
         elif field_name == 'retry':
             raise NotImplementedError
         else:
@@ -200,11 +202,11 @@ def flow(token, org, flow):
 
     def delete(msg_id):
         resp = requests.delete(f'{API}/flows/{org}/{flow}/messages/{msg_id}', auth=auth)
-        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
-                (resp.status_code, resp.content)
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content), \
+            (resp.status_code, resp.content)
 
     def upload(file_path):
-        files = {'content': open(file_path,'rb')}
+        files = {'content': open(file_path, 'rb')}
         data = {'event': 'file'}
         resp = requests.post(f'{API}/flows/{org}/{flow}/messages', auth=auth, files=files, data=data)
         assert resp.status_code == 201, (resp.status_code, resp.content)
@@ -241,7 +243,7 @@ def flow(token, org, flow):
 
     def events():
         with requests.get(f'{STREAM}/flows/{org}/{flow}', auth=auth,
-                          headers={'Accept':'text/event-stream'}, stream=True) as resp:
+                          headers={'Accept': 'text/event-stream'}, stream=True) as resp:
             assert resp.status_code == 200, (resp.status_code, resp.content)
             yield from (json.loads(e.data) for e in get_events(resp))
 
@@ -293,11 +295,11 @@ def private(token, uid):
 
     def delete(msg_id):
         resp = requests.delete(f'{API}/private/{uid}/messages/{msg_id}', auth=auth)
-        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content),\
-                (resp.status_code, resp.content)
+        assert (resp.status_code == 200 and not resp.json()) or (resp.status_code == 204 and not resp.content), \
+            (resp.status_code, resp.content)
 
     def upload(file_path):
-        files = {'content': open(file_path,'rb')}
+        files = {'content': open(file_path, 'rb')}
         data = {'event': 'file'}
         resp = requests.post(f'{API}/private/{uid}/messages', auth=auth, files=files, data=data)
         assert resp.status_code == 201, (resp.status_code, resp.content)
@@ -362,6 +364,27 @@ class constructors:
 
 
 def connect(**kw):
+    """
+    Connect Flowdock to initialize a client to join a flow or private channel.
+
+    It supports multiple usage for different cases.
+
+    Switch among flow/private channels::
+
+        client = flowdock.connect(token=PERSONAL_API_TOKEN)
+        flow = client(org=ORG_NAME, flow=FLOW_NAME)
+        private = client(uid=USER_ID)
+
+    Join a channel in one line::
+
+        flow = flowdock.connect(token=PERSONAL_API_TOKEN, org=ORG_NAME, flow=FLOW_NAME)
+        private = flowdock.connect(token=PERSONAL_API_TOKEN, uid=USER_ID)
+        private = flowdock.connect(token=PERSONAL_API_TOKEN, name=USER_NAME)
+
+    Connect by integrate external services::
+
+        external_service = flowdock.connect(flow_token=FLOW_TOKEN)
+    """
     if kw.keys() == {'token'}:
         partial = lambda **kwargs: connect(**kw, **kwargs)
         partial.get_uid = lambda **kwargs: get_uid(**kw, **kwargs)

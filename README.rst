@@ -2,10 +2,16 @@
 Flowdock API wrapper
 ====================
 
-|PyPI Release Version| |Supported Python Distro|
+|PyPI Release Version| |License| |Supported Python Distro|
 
-.. |PyPI Release Version| image:: https://img.shields.io/pypi/v/flowdock-api-wrapper.svg?color=blue&label=PyPI&logo=python&logoColor=white
-.. |Supported Python Distro| image:: https://img.shields.io/pypi/pyversions/flowdock-api-wrapper.svg?color=blue&label=Supported%20Python%20Distro
+.. |PyPI Release Version| image:: https://img.shields.io/pypi/v/flowdock-api-wrapper?color=blue&label=PyPI&logo=python&logoColor=white
+    :target: https://pypi.org/project/flowdock-api-wrapper/
+.. |License| image:: https://img.shields.io/github/license/apua/flowdock?color=blue&label=License
+    :target: LICENSE
+.. |Supported Python Distro| image:: https://img.shields.io/pypi/pyversions/flowdock-api-wrapper?color=blue&label=Python
+.. |GitHub Actions| image:: https://github.com/apua/flowdock/workflows/{workflow}/badge
+    :target: https://github.com/apua/flowdock/actions
+
 
 This API wrapper aim to **summarize** Flowdock API usage with **intuitive** implementation,
 in order to make development simpler, like creating chatbots, integrating services, and monitoring Flowdock flows.
@@ -20,7 +26,7 @@ To contribute the wrapper, refer to development guide in ``flowdock.py`` comment
 
 Following content focus on introduing the usage of this wrapper;
 besides, since part of `Flowdock API Document`_ doesn't match current behavior,
-there are notifications added in each sections.
+notes are added in each sections.
 
 .. _`Flowdock API Document`: https://www.flowdock.com/api
 
@@ -431,7 +437,7 @@ To list messages under a thread, invoke :meth:`list` under :meth:`thread` (singu
 Integration
 ==============================
 
-.. image:: https://github.com/apua/flowdock/raw/re-write/Flowdock%20Inbox.png
+.. image:: screenshots/flowdock%20inbox.png
     :alt: Flowdock Inbox overview
 
 Flowdock can integrate external services, e.g. Trello, onto Flowdock Inbox,
@@ -483,7 +489,7 @@ The expected result is as below.
 Note that "ExternalService" shown in the figure is the integration name rather than the external service name,
 thus it is recommended to set integration name the same as external service name.
 
-.. image:: https://github.com/apua/flowdock/raw/re-write/basic%20expected%20result.png
+.. image:: screenshots/basic%20expected%20result.png
     :alt: basic expected result shows the presented item name, a user created item, and discussion
 
 Activities is just like the item history,
