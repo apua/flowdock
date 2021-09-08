@@ -1,0 +1,11 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "flowdock"
+authors = [{name = "Apua", email = "apua.a.aa@gmail.com"}]
+readme = "README.rst"
+classifiers = ["License :: OSI Approved :: MIT License"]
+version = "1.0.15"
+dynamic = ["description"]
