@@ -10,18 +10,64 @@ Flowdock API wrapper
     :target: https://github.com/apua/flowdock/blob/main/LICENSE
 .. |Supported Python Distro| image:: https://img.shields.io/pypi/pyversions/flowdock-api-wrapper?color=blue&label=Python
     :target: https://pypi.org/project/flowdock-api-wrapper/
-.. |GitHub Actions| image:: https://github.com/apua/flowdock/workflows/{workflow}/badge
-    :target: https://github.com/apua/flowdock/actions
 
+This API wrapper provides methods with **intuitive** implementation to make development simpler.
 
-This API wrapper aim to **summarize** Flowdock API usage with **intuitive** implementation,
-in order to make development simpler, like creating chatbots, integrating services, and monitoring Flowdock flows.
+With Flowdock API, developers are able to:
 
-To install the wrapper, use ``pip`` or ``pipenv``:
+1. Create chatbots
 
-.. code:: sh
+.. code:: python
+
+    >>> import flowdock
+    >>> flow = flowdock.connect(token=TOKEN, org='apua', flow='main')
+    >>> msg = flow.send('Message')  # send a message
+    >>> thread = flow.thread(msg['thread']['id'])
+    >>> reply = thread.send('Reply')  # reply the message
+    >>> flow.list(limit=1)['content']  # get last message content
+    'Reply'
+
+2. Integrate external services
+
+.. code:: python
+
+    >>> from flowdock import constructors as new
+    >>> apua = new.author('Apua', avatar='http://gravatar.com/apua.jpg')
+    >>> item = new.thread(
+    ...     'Item 42',
+    ...     external_url = 'https://external.service/item/42',
+    ...     body = '<strong>The detail of Item 01</strong>',
+    ...     fields = [
+    ...         new.field(label='Project', value='F.A.W.'),
+    ...         new.field(label='<em>Creator</em>', value='<em>Apua</em>'),
+    ...     ],
+    ...     status = new.status(color='green', value='WIP'),
+    ... )
+    >>> import flowdock
+    >>> serivce = flowdock.connect(flow_token=FLOW_TOKEN)
+    >>> service.present('42', apua, 'created item 42', item)
+
+3. Monitor Flowdock flows
+
+.. code:: python
+
+    >>> import flowdock
+    >>> flow = flowdock.connect(token=TOKEN, org='apua', flow='main')
+    >>> ev = next(flow.events())
+    >>> ev['content'])
+    'New message!!'
+
+.. reference
+
+It also **summarizes** Flowdock API usage with **intuitive** implementation for reference.
+
+Installation:
+
+.. code:: console
 
     $ pip install flowdock-api-wrapper
+
+.. development
 
 To contribute the wrapper, refer to development guide in ``flowdock.py`` comment.
 
