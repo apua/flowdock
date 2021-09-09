@@ -6,9 +6,9 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "flowdock-api-wrapper"
-version = "1.0.15"
+version = "1.0.16"
 description = "Flowdock API Wrapper"
-dependencies = ["requires"]
+dependencies = ["requests"]
 keywords = ["flowdock"]
 requires-python = ">=3.6"
 
@@ -59,6 +59,11 @@ classifiers = [
 # `flit` dropped "url" or "home-page" key
 # It is setuptools legacy.
 Source = "https://github.com/apua/flowdock"
+
+[project.optional-dependencies]
+# The example below is wrong usage IMO.
+#test = ["pytest >=2.7.3","pytest-cov"]
+#doc = ["sphinx", "furo"]
 
 [tool.flit.module]
 # `flit` considers 1 package 1 module.
