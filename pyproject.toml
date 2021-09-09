@@ -55,6 +55,11 @@ classifiers = [
     "Topic :: Communications :: Conferencing",
 ]
 
+[project.urls]
+# `flit` dropped "url" or "home-page" key
+# It is setuptools legacy.
+Source = "https://github.com/apua/flowdock"
+
 [tool.flit.module]
 # `flit` considers 1 package 1 module.
 # It is a convention, although I remember there is exceptions.
@@ -62,7 +67,8 @@ classifiers = [
 # which helps name collision.
 name = "flowdock"
 
-[project.urls]
-# `flit` dropped "url" or "home-page" key
-# It is setuptools legacy.
-Source = "https://github.com/apua/flowdock"
+[tool.flit.sdist]
+# `flit` includes all files to sdist by default.
+# It is a convention.
+include = []
+exclude = ["screenshots"]
