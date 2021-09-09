@@ -76,4 +76,4 @@ name = "flowdock"
 # `flit` includes all files to sdist by default.
 # It is a convention.
 include = []
-exclude = ["screenshots"]
+exclude = ["doc"]
