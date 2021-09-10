@@ -15,9 +15,8 @@ This API wrapper provides methods with **intuitive** implementation to make deve
 
 With Flowdock API, developers are able to:
 
-1. Create chatbots
-
-.. code:: python
+Create chatbots
+ .. code:: python
 
     >>> import flowdock
     >>> flow = flowdock.connect(token=TOKEN, org='apua', flow='main')
@@ -27,9 +26,8 @@ With Flowdock API, developers are able to:
     >>> flow.list(limit=1)['content']  # get last message content
     'Reply'
 
-2. Integrate external services
-
-.. code:: python
+Integrate external services
+ .. code:: python
 
     >>> from flowdock import constructors as new
     >>> apua = new.author('Apua', avatar='http://gravatar.com/apua.jpg')
@@ -47,9 +45,8 @@ With Flowdock API, developers are able to:
     >>> serivce = flowdock.connect(flow_token=FLOW_TOKEN)
     >>> service.present('42', apua, 'created item 42', item)
 
-3. Monitor Flowdock flows
-
-.. code:: python
+Monitor Flowdock flows
+ .. code:: python
 
     >>> import flowdock
     >>> flow = flowdock.connect(token=TOKEN, org='apua', flow='main')
