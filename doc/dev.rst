@@ -1,6 +1,5 @@
-====================
-Development Guide
-====================
+This guide notes things to know on development and maintenance.
+
 
 Design
 ===============
@@ -16,6 +15,7 @@ so that user can learn what Flowdock exactly does by trial and error.
 
 To reduce unexpected response due to user typo, wrapped API should validate supported parameters;
 in the case of integration, the parameters in the nest JSON payload of a HTTP request should be validate, too.
+
 
 Implementation
 ===============
@@ -35,50 +35,88 @@ and use assertion to represent origin API response including status code and res
 
 To implement Server-Sent Events, simply follow W3C document instruction.
 
+
 Testing
 ===============
 
-All test cases are listed in README.rst and in doctest format.
+All test cases are listed in `ref.rst`__ and in doctest format.
 Invoke built-in ``doctest`` module to execute test cases.
+
+__ ./ref.rst
 
 Most of all test cases are built on Flowdock services, require real API token and channels,
 thus one might have to adjust test data for test environment.
 At least, they can be executed repeatedly.
 
-Publishing
+
+Repository
 ===============
 
-``README.rst`` treated as both user guide and landing page contains:
+To keep the repository simple for simple project,
+there are less items at the top of folder structure.
 
--   Releasd version, license, and so on.
--   Purpose, features, and usage.
+``LICENSE``
+    Should be at the top of repository.
 
-``flowdock.py`` contains source code, real package status, and development guide in comment:
+``README.rst``
+    The full description of pacakge in metadata and shown on PyPI.
 
--   Version number
--   Design, implementation, testing, and publishing
+    All links inside README must be absoluted path.
 
-Releases on PyPI are referred to PyPA tutorial `Packaging Python Projects`_ and leveraging ``twine``.
-Below shows how to test publishing onto TestPyPI:
+    The brief content includes package version, license, introduction, and usage glance.
 
-.. _`packaging python projects`: https://packaging.python.org/tutorials/packaging-projects/
+``pyproject.toml``
+    Set project metadata with build tool ``flit``.
 
-.. code:: sh
+    ``flit`` helps:
 
-    $ ls setup.py
-    setup.py
-    $ rm -r dist ; python setup.py sdist bdist_wheel
-    $ twine check dist/*.whl
-    $ twine upload --user=${user} --password=${password} --repository-url https://test.pypi.org/legacy/ 'dist/*'
+    -   to setup development environment by initializing ``pyproject.toml``,
+        installing dependencies, and setting source code for edit mode.
+    -   to package and publish source code to sdist and wheel.
 
-.. WARNING:: MUST avoid version collision, which is no way to solve even deleting it on PyPI/TestPyPI.
+    ``flit`` would not build anything such as compile C code or support build script.
 
-Release process:
+    To publish a package, follow the workflow:
 
-1.  Merge development branch to master
-#.  Review hard-coded information in ``setup.py``
-#.  Bump version number in ``flowdock.py``
-#.  Upload to TestPyPI for test
-#.  Commit with template "Bumped version to v0.0"
-#.  Upload to PyPI
-#.  Tag commit and push to Github
+    #.  Update the version number and project metadata inside ``pyproject.toml``.
+    #.  Ensure commit merged to ``main`` branch.
+    #.  Commit bumping version number.
+    #.  Check build content by ``flit build`` and ``tar tvf dist/*``.
+    #.  Publish by ``flit update``.
+    #.  Tag commit by git tag.
+
+    TestPyPI can help to verify the result on PyPI::
+
+        FLIT_INDEX_URL=https://test.pypi.org/legacy/ FLIT_USERNAME=*** FLIT_PASSWORD=*** flit publish --no-setup --format=wheel
+
+``src/``
+    Stores source code ``flowdock.py``.
+
+    There is a wrong convention in most Python projects that
+    put module (e.g. ``flowdock/``) at the top of repository.
+
+    The folders, such as "doc"/"build"/"dist", their name is repository-wise,
+    thus source code should be in "src" rather than expose at the top.
+
+    Another wrong convention is the usage of ``__version__``.
+
+    The version number is project-wise, and is part of metadata.
+    It could be put at the top of each source code, in comment, with license.
+    But it should not a Python object.
+
+``doc/``
+    Collects reference and development/maintenance guide.
+
+    It is worth to allocate a folder for them, because it is inappropriate
+    to store them in source code docstring or comments.
+
+Automation
+===============
+
+The preferred CI service is GitHub Actions.
+
+On such minimal project, it is not worth to add things, such as linter, to CI.
+It is not worth to automate tests for free trial Flowdock, either.
+
+To update code, verify, bump version, and publish the package, we keep it manually
+in order to avoid maintaining additional CI workflow.
