@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "flowdock-api-wrapper"
-version = "1.0.16"
+version = "1.0.16.1"
 description = "Flowdock API Wrapper"
 dependencies = ["requests"]
 keywords = ["flowdock"]
