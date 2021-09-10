@@ -57,16 +57,34 @@ With Flowdock API, developers are able to:
     >>> ev['content'])
     'New message!!'
 
-.. reference
 
-It also **summarizes** Flowdock API usage with **intuitive** implementation for reference.
+How to Install
+==============
 
-Installation:
+This package is available on PyPI:
 
 .. code:: console
 
     $ pip install flowdock-api-wrapper
 
-.. development
 
-To contribute the wrapper, refer to development guide in ``flowdock.py`` comment.
+How to Use
+==========
+
+The `reference`_ is available to detail the library usage.
+
+It also summarizes the Flowdock API usage
+while the wrapped methods map to Flowdock API directly.
+
+Please refer to `reference`_ for further usage.
+
+.. _`reference`: https://github.com/apua/flowdock/blob/dev/doc/ref.rst
+
+
+How to Contribute
+=================
+
+To contribute the package, refer to `development guide`_,
+which decribe the design, implementation, and maintenance.
+
+.. _`development guide`: https://github.com/apua/flowdock/blob/dev/doc/def.rst
