@@ -70,8 +70,8 @@ How to Use
 
 The `reference`_ is available to detail the library usage.
 
-It also summarizes the Flowdock API usage
-while the wrapped methods map to Flowdock API directly.
+It also summarizes the usage of Flowdock API
+while the wrapped methods map to the API directly.
 
 Please refer to `reference`_ for further usage.
 

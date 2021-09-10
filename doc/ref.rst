@@ -1,16 +1,18 @@
-
-Following content focus on introduing the usage of this wrapper;
-besides, since part of `Flowdock API Document`_ doesn't match current behavior,
-notes are added in each sections.
-
-.. _`Flowdock API Document`: https://www.flowdock.com/api
-
-.. contents:: Contents
-    :depth: 2
-
 .. role:: func(literal)
 .. role:: meth(literal)
 .. role:: mod(literal)
+
+This reference introduces the library usage.
+
+.. note::
+
+    Part of `Flowdock API Document`__ doesn't match current behavior,
+    notes are added in each sections.
+
+    __ https://www.flowdock.com/api
+
+.. contents:: Contents
+    :depth: 2
 
 
 Authentication and Channel
@@ -18,13 +20,21 @@ Authentication and Channel
 
 To access resources of private channel/flows/external service integrations, Flowdock provides 2 kinds of tokens:
 
--   Personal API token -- As a user to access private channels and flows.
+Personal API token
+    As a user to access private channels and flows.
     A user can get personal API token from `API tokens`_ page.
 
--   Flow token -- As an external service integration to access inbox.
+    .. _`api tokens`: https://www.flowdock.com/account/tokens
+
+Flow token
+    As an external service integration to access inbox.
     It is generated after adding an integration onto a flow.
 
-.. _`api tokens`: https://www.flowdock.com/account/tokens
+    .. note::
+
+        To register an application (i.e. external service) on Flowdock, flow the path on Flowdock::
+
+            Account → Developer Applications → New Application
 
 Here, we assume keys are stored in a Python file, say :mod:`test_tokens.py`.
 
