@@ -75,7 +75,7 @@ while the wrapped methods map to Flowdock API directly.
 
 Please refer to `reference`_ for further usage.
 
-.. _`reference`: https://github.com/apua/flowdock/blob/dev/doc/ref.rst
+.. _`reference`: https://github.com/apua/flowdock/blob/main/doc/ref.rst
 
 
 How to Contribute
@@ -84,4 +84,4 @@ How to Contribute
 To contribute the package, refer to `development guide`_,
 which decribe the design, implementation, and maintenance.
 
-.. _`development guide`: https://github.com/apua/flowdock/blob/dev/doc/def.rst
+.. _`development guide`: https://github.com/apua/flowdock/blob/main/doc/dev.rst
