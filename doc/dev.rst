@@ -58,6 +58,9 @@ there are less items at the top of folder structure.
 ``LICENSE``
     Should be at the top of repository.
 
+    The "year" inside means "the year of first publication of the work", doesn't have to be updated.
+    Ref: https://www.copyrightlaws.com/copyright-symbol-notice-year/
+
 ``README.rst``
     The full description of pacakge in metadata and shown on PyPI.
 
