@@ -62,11 +62,13 @@ there are less items at the top of folder structure.
     Ref: https://www.copyrightlaws.com/copyright-symbol-notice-year/
 
 ``README.rst``
-    The full description of pacakge in metadata and shown on PyPI.
+    The full description of pacakge in metadata and shown on PyPI,
+    includes package version, license, introduction, and usage glance.
 
     All links inside README must be absoluted path.
 
-    The brief content includes package version, license, introduction, and usage glance.
+    The badge images and hyperlinks should not bind to newest version.
+    Instead, the image should be static and link to sepecified git tag every time.
 
 ``pyproject.toml``
     Set project metadata with build tool ``flit``.
@@ -82,6 +84,7 @@ there are less items at the top of folder structure.
     To publish a package, follow the workflow:
 
     #.  Update the version number and project metadata inside ``pyproject.toml``.
+    #.  Update badges inside ``README.rst``.
     #.  Ensure commit merged to ``main`` branch.
     #.  Commit bumping version number.
     #.  Check build content by ``flit build`` and ``tar tvf dist/*``.
@@ -108,7 +111,7 @@ there are less items at the top of folder structure.
     But it should not a Python object.
 
 ``doc/``
-    Collects reference and development/maintenance guide.
+    Collects documents and related media.
 
     It is worth to allocate a folder for them, because it is inappropriate
     to store them in source code docstring or comments.

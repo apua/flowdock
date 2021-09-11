@@ -2,14 +2,17 @@
 Flowdock API wrapper
 ====================
 
-|PyPI Release Version| |License| |Supported Python Distro|
+|release| |license| |python|
 
-.. |PyPI Release Version| image:: https://img.shields.io/pypi/v/flowdock-api-wrapper?color=blue&label=PyPI&logo=python&logoColor=white
-    :target: https://pypi.org/project/flowdock-api-wrapper/
-.. |License| image:: https://img.shields.io/github/license/apua/flowdock?color=blue&label=License
-    :target: https://github.com/apua/flowdock/blob/main/LICENSE
-.. |Supported Python Distro| image:: https://img.shields.io/pypi/pyversions/flowdock-api-wrapper?color=blue&label=Python
-    :target: https://pypi.org/project/flowdock-api-wrapper/
+.. |release|
+    image:: https://img.shields.io/badge/PyPI-v1.1-blue?logo=python&logoColor=white
+    :target: https://pypi.org/project/flowdock-api-wrapper/1.1/
+.. |license|
+    image:: https://img.shields.io/badge/License-MIT-blue
+    :target: https://github.com/apua/flowdock/blob/v1.1/LICENSE
+.. |python|
+    image:: https://img.shields.io/badge/Python-3.6%20|%203.7%20|%203.8%20|%203.9-blue
+    :target: https://pypi.org/project/flowdock-api-wrapper/1.1/
 
 This API wrapper provides methods with **intuitive** implementation to make development simpler.
 
